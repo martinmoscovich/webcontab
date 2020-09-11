@@ -1,0 +1,45 @@
+spring.jersey.application-path: /api
+spring.h2.console:
+  enabled: true
+  path: /h2
+  
+spring.datasource.url: jdbc:h2:file:./${webcontab.db.dir}/webcontab;LAZY_QUERY_EXECUTION=1;MAX_MEMORY_ROWS=5000;PASSWORD_HASH=TRUE;IFEXISTS=TRUE";
+  
+logging.level:
+  root: WARN
+  
+spring.cache.jcache.config: classpath:ehcache.xml
+spring.jpa.hibernate.ddl-auto: none
+
+spring.flyway.enabled: false
+
+spring.jpa.properties:
+  javax.persistence.sharedCache.mode: ENABLE_SELECTIVE
+
+  hibernate:
+    jdbc.batch_size: 5
+    javax.cache:
+      uri: classpath:ehcache.xml
+      #provider: org.ehcache.jsr107.EhcacheCachingProvider
+    cache:
+      use_second_level_cache: true
+      use_query_cache: true
+      region.factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+  
+    #required - enable selective caching mode - only entities with @Cacheable annotation will use L2 cache.
+    generate_statistics: true
+    session.events.log: true
+
+    
+server.compression:
+  # Enable response compression
+  enabled: true
+   
+  # The comma-separated list of mime types that should be compressed
+  mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+  
+  # Compress the response only if the response size is at least 1KB
+  min-response-size: 1024
+  
+  http2.enabled: true
+  

@@ -1,0 +1,30 @@
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+    http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2
+      http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    <id>zip</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <fileSets>
+        <!-- Incluye los archivos del cliente-->
+        <fileSet>
+            <directory>../client/dist</directory>
+            <outputDirectory>static</outputDirectory>
+        </fileSet>
+
+        <!-- Incluye los archivos generados en este proyecto (properties, bat Replacer, application.yml) -->
+        <fileSet>
+            <directory>target/classes</directory>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
+    </fileSets>
+    <files>
+        <!-- Incluye el Jar del server -->
+        <file>
+            <source>../server/target/webcontab-server-${server.version}.jar</source>
+            <destName>webcontab.jar</destName>
+        </file>
+    </files>
+</assembly>

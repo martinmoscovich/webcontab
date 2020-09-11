@@ -1,0 +1,38 @@
+webcontab:
+  db:
+    dir: db
+    backup:
+      dir: backup/db
+      #cron: "*/10 * * * * MON-FRI" #https://stackoverflow.com/questions/26147044/spring-cron-expression-for-every-day-101am
+      cron: "0 0 2 * * MON-FRI" # Deberia ser: todos los dias de semana a las 2AM
+    migration:
+      enabled: true
+      repair: false
+  updater:
+    cron: "0 0 4 * * MON-FRI" # Deberia ser: todos los dias de semana a las 4AM
+    url: http://localhost:8080/updates/
+    versionFile: version.properties
+    backupDir: backup/app
+  importer:
+    backupDir: backup/importer
+  
+spring.datasource:
+  username: webcontab
+  #password: ${WEBCONTAB_DB_PASSWORD}
+  password: 016209667ce94414ebac6ffeb4eaa31ef217f53d439156443762feadb1f538fc
+
+spring.jpa.hibernate.ddl-auto: update
+spring.jpa.properties.hibernate.format_sql: true 
+spring.jpa.show-sql: true
+  
+spring.h2.console.enabled: true
+
+logging.level:
+  org.springframework.security: WARN
+# org.hibernate: DEBUG
+  #com.fasterxml: DEBUG
+  org.hibernate: WARN #INFO
+  #org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: INFO
+  org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  com.mmoscovich: DEBUG
+  
