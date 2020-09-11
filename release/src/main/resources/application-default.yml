@@ -1,0 +1,51 @@
+webcontab:
+  db:
+    dir: db
+    backup:
+      dir: backup/db
+      cron: "0 0 2 * * MON-FRI" # Deberia ser: todos los dias de semana a las 2AM
+    migration:
+      enabled: true
+      repair: false
+  updater:
+    cron: "0 0 4 * * MON-FRI" # Deberia ser: todos los dias de semana a las 4AM
+    url: http://www.moscovich.com.ar/webcontab/
+    versionFile: version.properties
+    backupDir: backup/app
+    repoDir: .
+  importer:
+    backupDir: backup/importer
+
+# TLS Config
+server.port: 8443
+server.ssl:
+  enabled: true
+  # The format used for the keystore. It could be set to JKS in case it is a JKS file
+  key-store-type: PKCS12
+  # The path to the keystore containing the certificate
+  key-store: cert.p12
+  # The password used to generate the certificate
+  key-store-password: ${WEBCONTAB_CERT_PASSWORD}
+  # The alias mapped to the certificate
+  key-alias: webcontab
+  
+# DB CONFIG
+spring.datasource:
+  username: webcontab
+  password: ${WEBCONTAB_DB_PASSWORD}
+
+spring.jpa.hibernate.ddl-auto: update
+spring.jpa.properties.hibernate.format_sql: false 
+spring.jpa.show-sql: false
+  
+spring.h2.console.enabled: true
+
+# LOGGING CONFIG
+logging.level:
+  org.springframework.security: WARN
+# org.hibernate: DEBUG
+  #com.fasterxml: DEBUG
+  org.hibernate.SQL: WARN #INFO
+  #org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  com.mmoscovich: DEBUG
+  

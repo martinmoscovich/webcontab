@@ -1,0 +1,77 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>webcontab-client</artifactId>
+    <packaging>pom</packaging>
+    <name>WebContab - Client</name>
+    <description>Cliente JS del Sistema Contable</description>
+
+    <parent>
+        <groupId>com.mmoscovich</groupId>
+        <artifactId>webcontab</artifactId>
+        <version>0.13</version>
+    </parent>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.test.skip>true</maven.test.skip>
+    </properties>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+
+                    <execution>
+                        <id>npm run clean (clean)</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>clean</phase>
+                        <configuration>
+                            <executable>npm</executable>
+                            <arguments>
+                                <argument>run</argument>
+                                <argument>clean</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <!-- Required: The following will ensure `npm install` is called
+					     before anything else during the 'Default Lifecycle' -->
+                    <execution>
+                        <id>npm install (initialize)</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <executable>npm</executable>
+                            <arguments>
+                                <argument>install</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>npm run build (compile)</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <phase>compile</phase>
+                        <configuration>
+                            <executable>npm</executable>
+                            <arguments>
+                                <argument>run</argument>
+                                <argument>build</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
+
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

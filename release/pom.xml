@@ -1,0 +1,80 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>webcontab-release</artifactId>
+    <packaging>pom</packaging>
+    <name>WebContab - Release</name>
+    <description>Release del WebContab</description>
+
+    <parent>
+        <groupId>com.mmoscovich</groupId>
+        <artifactId>webcontab</artifactId>
+        <version>0.13</version>
+    </parent>
+
+    <build>
+        <finalName>webcontab-${project.version}</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+
+            <!-- Compila el Replacer -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <source>13</source>
+                    <target>13</target>
+                    <includes>
+                        <include>*.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+
+            <!-- Archivos auxiliares (bat, properties, yaml) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>resources</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Assembly que crea el zip de la Release con todos los archivos necesario -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <descriptor>maven-zip.xml</descriptor>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

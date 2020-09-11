@@ -1,0 +1,272 @@
+/* Theme style (colors & sizes) */
+@import "theme-default";
+
+/* Core Libs & Lib configs */
+@import "buefy";
+
+/* Mixins */
+@import "mixins";
+
+/* Theme components */
+@import "nav-bar";
+@import "aside";
+@import "title-bar";
+@import "hero-bar";
+@import "card";
+@import "table";
+@import "tiles";
+@import "form";
+@import "main-section";
+@import "modal";
+// @import "footer";
+@import "misc";
+
+/* Animate.css custom build (just selected animations to minimize bundle size) */
+@import "animate.min.css";
+
+
+html,
+body,
+#app,
+.is-main-section {
+  height: 100%;
+}
+
+.full-screen {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+}
+
+// Sidebar reducido
+.aside.is-reduced {
+  transition: width .2s ease-out;
+  width: 2.5rem;
+}
+
+// Fix para datepicker en modal
+.modal .animation-content.modal-content {
+  overflow: visible !important;
+}
+
+// Se cambian los colores de fondo y de letra del snackbar para que se parezca al toast
+.snackbar {
+  &.is-info {
+    background: #167df0;
+    button {
+      background: #167df0 !important;
+      color: #363636 !important;
+    }
+  }
+  &.is-danger {
+    background: #ff3860;
+    button {
+      background: #ff3860 !important;
+      color: #363636 !important;
+    }
+  }
+
+  &.is-warning {
+    background: #ffdd57;
+    .text {
+      color: #363636 !important;
+    }
+    button {
+      background: #ffdd57 !important;
+      color: #363636 !important;
+    }
+  }
+
+  &.is-success {
+    background: #21bd58;
+    button {
+      background: #21bd58 !important;
+      color: #363636 !important;
+    }
+  }
+}
+
+// Pone blancos los botones de paginacion
+.pagination-link {
+  background: #fff;
+  color: #2e323a;
+}
+
+@include tablet { // antes desktop
+  /** Maneja el sidebar reduced */
+  html {
+    &.has-aside-left {
+      &.has-aside-expanded div.app.reduced {
+        &, nav.navbar {
+          padding-left: 2.5rem;
+        }
+      }
+      nav.navbar, & {
+        @include transition(padding-left);
+      }
+      aside.is-placed-left {
+        display: block;
+      }
+    }
+  }
+}
+
+/** En modo Tablet (desde 768 a 1023) */
+@media screen and (max-width: 1023px) {
+  // El breadcrum del navbar tiene que ocupar todo para empujar a los botones de accion a la derecha
+  .navbar-all-mobile {
+    flex-grow: 1;
+  }
+
+  // La seccion (container ppal de la pagina) se reduce para ganar ancho
+  .section {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+}
+
+/** En modo Mobile (hasta 768) */
+@media screen and (max-width: 768px) {
+  // La seccion (container ppal de la pagina) se reduce para ganar ancho
+  .section {
+    padding-right: 2px;
+    padding-left: 2px;
+  }
+}
+
+
+.hand {
+  cursor: pointer;
+}
+
+.selectable {
+  cursor: pointer;
+  &:hover {
+    background-color: whitesmoke;
+  }
+}
+
+.has-error input {
+  border-color: #ff3860;
+}
+
+.card-list-item {
+  border-top: none;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+}
+
+.pl-0 {
+  padding-left: 0 !important;
+}
+.pl-1 {
+  padding-left: 4px !important;
+}
+.pl-2 {
+  padding-left: 8px !important;;
+}
+.pl-3 {
+  padding-left: 16px !important;;
+}
+.pa-0 {
+  padding: 0 !important;
+}
+.pa-1 {
+  padding: 4px !important;;
+}
+.pa-2 {
+  padding: 8px !important;;
+}
+.pa-3 {
+  padding: 16px !important;
+}
+.py-0 {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.mr-0 {
+  margin-right: 0 !important;
+}
+.mr-1 {
+  margin-right: 4px !important;
+}
+.mr-2 {
+  margin-right: 8px !important;
+}
+.mr-3 {
+  margin-right: 16px !important;
+}
+.ml-0 {
+  margin-left: 0 !important;
+}
+.ml-1 {
+  margin-left: 4px !important;
+}
+.ml-2 {
+  margin-left: 8px !important;
+}
+.ml-3 {
+  margin-left: 16px !important;
+}
+.mt-0 {
+  margin-top: 0 !important;
+}
+.mt-1 {
+  margin-top: 4px !important;
+}
+.mt-2 {
+  margin-top: 8px !important;
+}
+.mt-3 {
+  margin-top: 16px !important;
+}
+.mb-0 {
+  margin-bottom: 0 !important;
+}
+.mb-1 {
+  margin-bottom: 4px !important;
+}
+.mb-2 {
+  margin-bottom: 8px !important;
+}
+.mb-3 {
+  margin-bottom: 16px !important;
+}
+.ma-0 {
+  margin: 0 !important;
+}
+
+.wc-is-loading {
+  margin: 0 auto;
+  width: 3em;
+  height: 3em;
+  position: relative;
+  pointer-events: none;
+  opacity: 0.5;
+  overflow: hidden;
+  &:after {
+    @include loader;
+    position: absolute;
+    top: calc(50% - 1.5em);
+    left: calc(50% - 1.5em);
+    width: 3em;
+    height: 3em;
+    border-width: 0.25em;
+  }
+
+  &.big {
+    width: 6em;
+    height: 6em;
+
+    &:after {
+      width: 6em;
+      height: 6em;
+      top: calc(50% - 3em);
+      left: calc(50% - 3em);
+    }
+  }
+}
