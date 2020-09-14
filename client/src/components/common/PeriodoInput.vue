@@ -30,6 +30,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Periodo } from '../../model/Periodo';
+import { isBefore, isAfter } from '@/utils/date';
 
 /** Input que permite ver / modificar un periodo, o sea una fecha de inicio y una de fin */
 @Component
@@ -53,9 +54,9 @@ export default class PeriodoInput extends Vue {
   private get realFocusedDate() {
     const now = this.focusedDate;
     // Si la fecha indicada supera la maxima, se enfoca la maxima
-    if (this.maxDate && now.getTime() > this.maxDate.getTime()) return this.maxDate;
+    if (this.maxDate && isAfter(now, this.maxDate)) return this.maxDate;
     // Si la fecha indicada es anterior a la minima, se enfoca la minina
-    if (this.minDate && now.getTime() < this.minDate.getTime()) return this.minDate;
+    if (this.minDate && isBefore(now, this.minDate)) return this.minDate;
 
     // Se enfoca la indicada
     return now;

@@ -50,6 +50,7 @@ import { Vue, Component, Watch, Prop } from 'vue-property-decorator';
 import { BalanceFilter } from '@/api/InformeApi';
 import { notificationService } from '@/service';
 import { Categoria } from '@/model/Cuenta';
+import { isAfter, isBefore } from '@/utils/date';
 
 /** Filtro para balance */
 @Component
@@ -90,8 +91,8 @@ export default class FiltroBalance extends Vue {
 
   /** Valida las fechas del filtro */
   private validateDateFilter() {
-    // Si se completaron ambos campos y "desde" es mayor que "hasta", es un error
-    if (this.filter.hasta && (this.filter.desde?.getTime() ?? 0) > this.filter.hasta.getTime()) {
+    // Si se completaron ambos campos y "desde" es posterior que "hasta", es un error
+    if (this.filter.desde && this.filter.hasta && isAfter(this.filter.desde, this.filter.hasta)) {
       notificationService.warn("La fecha 'Desde' no puede ser mayor que la fecha 'Hasta'");
       return false;
     }
@@ -104,8 +105,8 @@ export default class FiltroBalance extends Vue {
   /** Obtiene la fecha enfocada */
   private get focusedDate() {
     const now = new Date();
-    if (this.maxDate && now.getTime() > this.maxDate.getTime()) return this.maxDate;
-    if (this.minDate && now.getTime() < this.minDate.getTime()) return this.minDate;
+    if (this.maxDate && isAfter(now, this.maxDate)) return this.maxDate;
+    if (this.minDate && isBefore(now, this.minDate)) return this.minDate;
     return now;
   }
 
