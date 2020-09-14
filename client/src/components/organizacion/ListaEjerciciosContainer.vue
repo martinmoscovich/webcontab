@@ -4,6 +4,7 @@
     :loading="loading"
     :readonly="readonly"
     @save="onNewEjercicio"
+    @renumerar="onRenumerar"
     @cerrar="onCerrar"
     @reabrir="onReabrir"
     @eliminar="onEliminar"
@@ -72,6 +73,11 @@ export default class ListaEjerciciosContainer extends Vue {
    */
   private onSelected(item: Ejercicio) {
     sessionStore.salirDeEjercicio({ keepPath: true, nuevo: item });
+  }
+
+  /** Handler cuando se desea renumerar un ejercicio */
+  private onRenumerar(ejercicio: Ejercicio, fecha: Date) {
+    organizacionStore.confirmarAsientosDelEjercicio({ ejercicio, fecha });
   }
 
   /** Handler cuando se desea cerrar un ejercicio */

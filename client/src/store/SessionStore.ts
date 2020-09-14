@@ -11,6 +11,7 @@ import { logError } from '@/utils/log';
 import { isDefined } from '@/utils/general';
 import { Rol } from '@/model/admin/Member';
 import { resetStore } from '@/store';
+import { isEqualOrAfter } from '@/utils/date';
 
 /**
  * Estado de sesion.
@@ -117,8 +118,14 @@ export class SessionStore extends VuexModule {
     // Si solo tiene rol de lectura, es true
     if (this.readonly) return true;
 
-    // Si puede modificar pero el ejercicio finalizo, tambien es true
-    if (this.ejercicio && this.ejercicio.finalizado) return true;
+    if (this.ejercicio) {
+      // Si puede modificar pero el ejercicio finalizo, tambien es true
+      if (this.ejercicio.finalizado) return true;
+
+      // Si no finalizo, pero la fecha confirmada es igual a la de finalizacion, no quedan fechas para modificar asientos
+      const fechaConfirmada = this.ejercicio.fechaConfirmada;
+      if (fechaConfirmada && isEqualOrAfter(fechaConfirmada, this.ejercicio.finalizacion)) return true;
+    }
 
     // Caso contrario, puede modificar
     return false;
