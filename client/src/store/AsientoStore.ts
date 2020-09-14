@@ -13,7 +13,6 @@ export class AsientoStore extends VuexModule {
   asientos: ListState<AsientoDTO> = getInitialListState();
   lastSavedId: number | null = null;
   tempForm: Partial<AsientoDTO> | null = null;
-  // imputaciones: ListState<Imputacion> = getInitialListState();
 
   @Mutation
   reset() {
