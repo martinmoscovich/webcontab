@@ -5,7 +5,7 @@ import { Component, Vue, Watch } from 'vue-property-decorator';
 import { ImputacionModel } from './Imputacion';
 import { AsientoDTO, UpstreamAsientoDTO } from './AsientoDTO';
 import { UpstreamImputacionDTO } from './ImputacionDTO';
-import { formatDate } from '@/utils/date';
+import { formatDate, isAfter, isBefore } from '@/utils/date';
 import { Dictionary } from 'vue-router/types/router';
 import { FormValidation } from '@/model/FormValidation';
 
@@ -76,8 +76,7 @@ export class AsientoModel extends Vue implements Nullable<Omit<AsientoDTO, 'impu
     // Se valida que la fecha este dentro del ejercicio
     const ej = sessionStore.ejercicio;
     if (ej) {
-      const ts = this.fecha.getTime();
-      if (ts < ej.inicio.getTime() || ts > ej.finalizacion.getTime()) {
+      if (isBefore(this.fecha, ej.inicio) || isAfter(this.fecha, ej.finalizacion)) {
         return {
           msg: `La fecha indicada no esta dentro del ejercicio (${formatDate(ej.inicio)} - ${formatDate(
             ej.finalizacion

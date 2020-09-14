@@ -152,3 +152,52 @@ export function formatDateForServer(date?: Date) {
 
   return `${date.getFullYear()}-${month}-${day}`;
 }
+
+/**
+ * Determina si la fecha 1 es anterior a la 2
+ * @param date1
+ * @param date2
+ */
+export function isBefore(date1: Date, date2: Date): boolean {
+  return date1.getTime() < date2.getTime();
+}
+
+/**
+ * Determina si la fecha 1 es posterior a la 2
+ * @param date1
+ * @param date2
+ */
+export function isAfter(date1: Date, date2: Date): boolean {
+  return date1.getTime() > date2.getTime();
+}
+
+/**
+ * Determina si la fecha 1 es igual o anterior a la 2
+ * @param date1
+ * @param date2
+ */
+export function isEqualOrBefore(date1: Date, date2: Date): boolean {
+  return !isAfter(date1, date2);
+}
+
+/**
+ * Determina si la fecha 1 es igual o posterior a la 2
+ * @param date1
+ * @param date2
+ */
+export function isEqualOrAfter(date1: Date, date2: Date): boolean {
+  return !isBefore(date1, date2);
+}
+
+export function addSeconds(date: Date, seconds: number): Date {
+  return new Date(date.getTime() + seconds * 1000);
+}
+export function addMinutes(date: Date, minutes: number): Date {
+  return addSeconds(date, minutes * 60);
+}
+export function addHours(date: Date, hours: number): Date {
+  return addMinutes(date, hours * 60);
+}
+export function addDays(date: Date, days: number): Date {
+  return addHours(date, days * 24);
+}

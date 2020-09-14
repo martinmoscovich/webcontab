@@ -61,6 +61,7 @@ import { Vue, Component, Watch, Prop } from 'vue-property-decorator';
 import { AsientosSearchFilter } from '@/api/AsientoApi';
 import { notificationService } from '../../service';
 import { isNullOrUndefined } from '../../utils/general';
+import { isAfter, isBefore } from '@/utils/date';
 
 /**
  * Filtro para asientos.
@@ -113,9 +114,9 @@ export default class FiltroAsientos extends Vue {
   private get focusedDate() {
     const now = new Date();
     // Si la fecha maxima es anterior a hoy, mostrar la fecha maxima
-    if (this.maxDate && now.getTime() > this.maxDate.getTime()) return this.maxDate;
+    if (this.maxDate && isAfter(now, this.maxDate)) return this.maxDate;
     // Si la fecha minima es posterior a hoy, mostrar la fecha minima
-    if (this.minDate && now.getTime() < this.minDate.getTime()) return this.minDate;
+    if (this.minDate && isBefore(now, this.minDate)) return this.minDate;
 
     // Mostrar la fecha de hoy
     return now;
@@ -138,21 +139,21 @@ export default class FiltroAsientos extends Vue {
       return null;
     }
     return {
-      min: this.filter.min,
-      max: this.filter.max
+      min: this.filter.min || undefined,
+      max: this.filter.max || undefined
     };
   }
 
   /** Valida que el filtro por fechas sea valido */
   private validateDateFilter() {
-    // Si se completaron ambos campos y desde es mayor que hasta, es un error
-    if (this.filter.hasta && (this.filter.desde?.getTime() ?? 0) > this.filter.hasta.getTime()) {
+    // Si se completaron ambos campos y desde es posterior que hasta, es un error
+    if (this.filter.desde && this.filter.hasta && isAfter(this.filter.desde, this.filter.hasta)) {
       notificationService.warn("La fecha 'Desde' no puede ser mayor que la fecha 'Hasta'");
       return false;
     }
     return {
-      desde: this.filter.desde,
-      hasta: this.filter.hasta
+      desde: this.filter.desde || undefined,
+      hasta: this.filter.hasta || undefined
     };
   }
 }
