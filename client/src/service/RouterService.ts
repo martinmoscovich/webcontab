@@ -56,9 +56,14 @@ export class RouterService {
     router.push(HOME_ROUTE);
   }
   login(opts?: { redirect?: boolean }) {
+    let redirect: string | undefined = window.location.pathname + window.location.search;
+
+    // Si no se pidio hacer redirect o es la raiz, se ignora
+    if (!opts?.redirect || redirect === '/') redirect = undefined;
+
     return {
       ...LOGIN_ROUTE,
-      query: opts?.redirect ? { redirect: window.location.pathname + window.location.search } : undefined
+      query: { redirect }
     };
   }
   goToLogin(opts?: { redirect?: boolean }) {
