@@ -40,5 +40,10 @@ public class Organizacion extends PersistentEntity {
     @Column(unique = true)
     @Length(min = 1, max = 25, groups = {Default.class, CreateValidation.class, UpdateValidation.class})
     private String nombre;
+	
+	@Override
+	public String toString() {
+		return String.format("Organizacion [id: %d, nombre: %s, CUIT: %s]", getId(), nombre, cuit); 
+	}
     
 }

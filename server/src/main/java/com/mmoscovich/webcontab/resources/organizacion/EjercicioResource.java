@@ -1,5 +1,7 @@
 package com.mmoscovich.webcontab.resources.organizacion;
 
+import java.time.LocalDate;
+
 import javax.inject.Inject;
 import javax.validation.constraints.Min;
 import javax.ws.rs.DELETE;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mmoscovich.webcontab.exception.ConflictException;
+import com.mmoscovich.webcontab.exception.EjercicioFechaInvalidaException;
 import com.mmoscovich.webcontab.exception.EntityNotFoundException;
 import com.mmoscovich.webcontab.exception.InvalidRequestException;
 import com.mmoscovich.webcontab.exception.OrganizacionNoSeleccionadaException;
@@ -74,6 +77,33 @@ public class EjercicioResource {
 	@Path("{id}/cierre")
 	public Ejercicio reabrir(@PathParam("id") @Min(1) Long id) throws EntityNotFoundException, OrganizacionNoSeleccionadaException, ConflictException {
 		return service.reabrirEjercicio(this.getById(id));
+	}
+	
+	/**
+	 * Renumera los asientos de un ejercicio y establece o actualiza la fecha de confirmacion de asientos del ejercicio.
+	 * <p>Se renumeran <b>TODOS</b> los asientos del ejercicio.
+	 * <br>La fecha se utiliza para establecer hasta que fecha estan <b>confirmados</b> los asientos.
+	 * No se podran crear, modificar ni borrar asientos anteriores o que ocurran en esa fecha.
+	 * <br>El ejercicio queda <b>read only</b> hasta dicha fecha.
+	 * </p>
+	 * <p>
+	 * Se renumeran todos los asientos para evitar que algun asiento posterior a esta fecha genere conflicto con los confirmados.
+	 * (quizas queda un asiento posterior con el mismo numero).
+	 * <br>Por eso, para evitarlo, renumeran todos, aunque los posteriores pueden ser modificados.
+	 * </p>
+	 * 
+	 * @param id id del ejercicio
+	 * @param fechaConfirmacion fecha hasta la cual estan confirmados los asientos (inclusive)
+	 * @return el ejercicio actualizado con la nueva fecha de confirmacion
+	 * 
+	 * @throws EntityNotFoundException si no se encuentra el ejercicio
+	 * @throws OrganizacionNoSeleccionadaException si no se selecciono organizacion
+	 * @throws EjercicioFechaInvalidaException si la fecha de confirmacion no esta dentro del ejercicio
+	 */
+	@PUT
+	@Path("{id}/confirmacion")
+	public Ejercicio confirmarAsientos(@PathParam("id") @Min(1) Long id, @QueryParam("fecha") LocalDate fechaConfirmacion) throws EntityNotFoundException, OrganizacionNoSeleccionadaException, EjercicioFechaInvalidaException {
+		return service.confirmarAsientos(this.getById(id), fechaConfirmacion);
 	}
 	
 	/**

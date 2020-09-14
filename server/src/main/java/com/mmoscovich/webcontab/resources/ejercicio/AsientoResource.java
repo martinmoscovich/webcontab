@@ -80,8 +80,9 @@ public class AsientoResource {
 	 * 
 	 * @throws InvalidRequestException si hay algun error de validacion
 	 * @throws EjercicioNoSeleccionadoException si no se selecciono un ejercicio
-	 * @throws EjercicioFechaInvalidaException si la fecha del asiento no es valida dentro del ejercicio
 	 * @throws EjercicioFinalizadoException si el ejercicio esta finalizado (no se puede modificar)
+	 * @throws EjercicioFechaInvalidaException EjercicioFechaInvalidaException si la fecha no esta dentro del ejercicio 
+	 * o es anterior a la confirmada del ejercicio (no se pueden crear asientos).
 	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -119,10 +120,11 @@ public class AsientoResource {
 	 * @throws EntityNotFoundException si no existe asiento con ese id
 	 * @throws EjercicioFinalizadoException si el ejercicio esta finalizado (no se puede modificar)
 	 * @throws EjercicioNoSeleccionadoException si no se selecciono un ejercicio
+	 * @throws EjercicioFechaInvalidaException si el asiento esta dentro de los confirmados (no se puede modificar)
 	 */
 	@DELETE
 	@Path("{id}")
-	public void eliminar(@PathParam("id") @NotNull @Min(1) Long id) throws EntityNotFoundException, EjercicioFinalizadoException, EjercicioNoSeleccionadoException {
+	public void eliminar(@PathParam("id") @NotNull @Min(1) Long id) throws EntityNotFoundException, EjercicioFinalizadoException, EjercicioFechaInvalidaException, EjercicioNoSeleccionadoException {
 		asientoService.eliminar(session.getEjercicioOrThrow(), id);
 	}
 
@@ -134,8 +136,9 @@ public class AsientoResource {
 	 * @throws InvalidRequestException si hay algun error de validacion en el asiento
 	 * @throws EntityNotFoundException si no existe asiento con ese id
 	 * @throws EjercicioFinalizadoException si el ejercicio esta finalizado (no se puede modificar)
-	 * @throws EjercicioFechaInvalidaException si la fecha del asiento no es valida dentro del ejercicio
 	 * @throws EjercicioNoSeleccionadoException si no se selecciono un ejercicio
+	 * @throws EjercicioFechaInvalidaException si la fecha del asiento no esta dentro del ejercicio o 
+	 * la fecha actual o la nueva son anteriores a la confirmada (no se puede modificar).
 	 */
 	@PUT
 	@Path("{id}")

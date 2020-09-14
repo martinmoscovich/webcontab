@@ -2,6 +2,7 @@ package com.mmoscovich.webcontab.dao;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -18,6 +19,17 @@ import com.mmoscovich.webcontab.model.Ejercicio;
  * DAO de Asientos 
  */
 public interface AsientoRepository extends JpaRepository<Asiento, Long> {
+	/**
+	 * Query Nativa de renumeracion.
+	 * <p>Primero convierte todos los numeros a negativo para evitar errores de duplicados al convertirlos al valor final
+	 * (hay una unique constraint por ejercicio y numero).
+	 * <br>Luego ejecuta un MERGE INTO que permite hacer un Update a partir de un SELECT.
+	 * </p>
+	 */
+	static final String RENUMERAR_QUERY = 
+			"UPDATE ASIENTO SET NUMERO = NUMERO * -1 WHERE EJERCICIO_ID = ?1 ;" + 
+			" MERGE INTO ASIENTO(ID, NUMERO) KEY(ID)" + 
+			" SELECT ID, ROW_NUMBER() OVER (ORDER BY FECHA, ID) FROM ASIENTO WHERE EJERCICIO_ID = ?1";
 
 	/**
 	 * Borra multiples asientos de un ejercicio por id 
@@ -35,6 +47,18 @@ public interface AsientoRepository extends JpaRepository<Asiento, Long> {
 	@Query("DELETE FROM Asiento WHERE ejercicio = :ejercicio")
 	void deleteByEjercicio(Ejercicio ejercicio);
 
+	/**
+	 * Renumera los asientos de un ejercicio por fecha y en caso de misma fecha, por orden de creacion.
+	 * @param ejercicioId id del ejercicio
+	 */
+	@Modifying
+	@Query(nativeQuery = true, value = RENUMERAR_QUERY)
+	void renumerarByEjercicio(Long ejercicioId);
+	
+	/** Obtiene una lista de asientos de un ejercicio por ids */
+	@Query("FROM Asiento WHERE ejercicio = :ejercicio AND id IN :ids")
+	List<Asiento> findByIds(Ejercicio ejercicio, Collection<Long> ids);
+	
 	/**
 	 * Busca un asiento por id y trae sus imputaciones
 	 */
