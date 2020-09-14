@@ -5,7 +5,7 @@
 
     <!-- Lista -->
     <div class="columns is-centered">
-      <div class="column is-half">
+      <div class="column is-two-thirds-tablet is-half-widescreen">
         <ListaEjerciciosContainer :organizacion="organizacion" :readonly="readonly" />
       </div>
     </div>

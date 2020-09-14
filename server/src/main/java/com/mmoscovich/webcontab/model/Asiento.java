@@ -109,17 +109,17 @@ public class Asiento extends PersistentEntity {
 	 * @throws ConstraintViolationException
 	 * @throws EjercicioFechaInvalidaException
 	 */
-	public void validar(boolean checkSaldo) throws InvalidRequestException, ConstraintViolationException, EjercicioFechaInvalidaException {
+	public void validar(boolean checkImputaciones, boolean checkSaldo) throws InvalidRequestException, ConstraintViolationException, EjercicioFechaInvalidaException {
 		ValidationUtils.validate(this);
 		
 		// Validar el ejercicio
 		if(this.getEjercicio() == null) throw new InvalidRequestException("El asiento debe estar asociado a un ejercicio");
 		
-		// Validar que el asiento este dentro del ejercicio
+		// Validar que el asiento este dentro del ejercicio y luego de la fecha de confirmacion
 		this.getEjercicio().validateFecha(this.getFecha());
 
-		for(Imputacion i : this.imputaciones) {
-			i.validar();
+		if(checkImputaciones) {
+			for(Imputacion i : this.imputaciones) i.validar();
 		}
 		
 		// Validar que los saldos sean 0

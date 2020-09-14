@@ -5,8 +5,10 @@ import { Ejercicio, mapEjercicicioFromServer } from '@/model/Ejercicio';
 import { SimpleApi } from '@/api/SimpleApi';
 import { Periodo } from '@/model/Periodo';
 import { Member } from '@/model/admin/Member';
+import { formatDateForServer } from '@/utils/date';
 
 const BASE_URL = '/organizaciones';
+const EJERCICIOS_BASE_URL = '/ejercicios';
 
 /** Payload necesario para crear un ejercicio */
 export interface CrearEjercicioPayload {
@@ -63,7 +65,7 @@ export class OrganizacionApi extends SimpleApi<Organizacion> {
   async eliminarEjercicio(payload: EliminarEjercicioPayload): Promise<void> {
     await this.http
       .delete(
-        `/ejercicios/${payload.ejercicio.id}${queryString({
+        `${EJERCICIOS_BASE_URL}/${payload.ejercicio.id}${queryString({
           organizacion: payload.organizacion
         })}`
       )
@@ -74,14 +76,25 @@ export class OrganizacionApi extends SimpleApi<Organizacion> {
    * Cierra un ejercicio
    */
   finalizarEjercicio(ejercicio: Ejercicio): Promise<Ejercicio> {
-    return this.http.put(`/ejercicios/${ejercicio.id}/cierre`).then(toEntity(mapEjercicicioFromServer));
+    return this.http.put(`${EJERCICIOS_BASE_URL}/${ejercicio.id}/cierre`).then(toEntity(mapEjercicicioFromServer));
   }
 
   /**
    * Reabre un ejercicio cerrado
    */
   reabrirEjercicio(ejercicio: Ejercicio): Promise<Ejercicio> {
-    return this.http.delete(`/ejercicios/${ejercicio.id}/cierre`).then(toEntity(mapEjercicicioFromServer));
+    return this.http.delete(`${EJERCICIOS_BASE_URL}/${ejercicio.id}/cierre`).then(toEntity(mapEjercicicioFromServer));
+  }
+
+  /**
+   * Renumera los asientos de un ejercicio y los confirma (commit) hasta la fecha indicada
+   * @param ejercicio ejercicio a renumerar
+   * @param fecha fecha de confirmacion
+   */
+  confirmarAsientosDelEjercicio(ejercicio: Ejercicio, fecha: Date): Promise<Ejercicio> {
+    return this.http
+      .put(`${EJERCICIOS_BASE_URL}/${ejercicio.id}/confirmacion` + queryString({ fecha: formatDateForServer(fecha) }))
+      .then(toEntity(mapEjercicicioFromServer));
   }
 
   findMiembros(org: Organizacion): Promise<Member[]> {

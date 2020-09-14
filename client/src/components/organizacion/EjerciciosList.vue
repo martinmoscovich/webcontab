@@ -24,6 +24,14 @@
       <!-- Acciones -->
       <template v-if="mostarAcciones">
         <div style="flex-grow: 1" />
+        <b-button
+          v-if="!item.finalizado && !readonly"
+          @click.stop="onRenumerar(item)"
+          size="is-small"
+          type="is-info"
+          class="mr-1"
+          >Renumerar</b-button
+        >
         <b-button v-if="!item.finalizado && !readonly" @click.stop="onCerrar(item)" size="is-small" type="is-primary"
           >Cerrar</b-button
         >
@@ -38,20 +46,27 @@
           type="is-danger"
           icon-right="delete"
         ></b-button>
+
+        <ModalRenumerarEjercicio
+          :ejercicio="ejercicioRenumerar"
+          @confirm="onRenumerarConfirm"
+          @close="onRenumerarClose"
+        />
       </template>
     </div>
   </nav>
 </template>
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
+import ModalRenumerarEjercicio from './ModalRenumerarEjercicio.vue';
 import { Ejercicio } from '@/model/Ejercicio';
 import { formatDate } from '@/utils/date';
-import { buildCompareFn } from '../../utils/array';
-import { sessionStore } from '../../store';
-import { notificationService } from '../../service';
+import { buildCompareFn } from '@/utils/array';
+import { sessionStore } from '@/store';
+import { notificationService } from '@/service';
 
 /** Lista de ejercicios de una organizacion */
-@Component
+@Component({ components: { ModalRenumerarEjercicio } })
 export default class EjerciciosList extends Vue {
   @Prop()
   ejercicios: Ejercicio[];
@@ -63,6 +78,9 @@ export default class EjerciciosList extends Vue {
   /** Indica si no se puede modificar */
   @Prop({ type: Boolean })
   readonly: boolean;
+
+  /** Indica si se muestra el modal para renumerar y para cual ejercicio. Si es null, no muestra el modal */
+  private ejercicioRenumerar: Ejercicio | null = null;
 
   /** Ordena los ejercicios por orden de creacion */
   private get sortedEjercicios() {
@@ -90,6 +108,20 @@ export default class EjerciciosList extends Vue {
     if (this.esSeleccionado(item)) return;
 
     this.$emit('selected', item);
+  }
+
+  /** Handler cuando se hace click en "Renumerar" */
+  private onRenumerar(item: Ejercicio) {
+    this.ejercicioRenumerar = item;
+  }
+
+  private onRenumerarConfirm(fecha: Date) {
+    this.$emit('renumerar', this.ejercicioRenumerar, fecha);
+    this.ejercicioRenumerar = null;
+  }
+
+  private onRenumerarClose() {
+    this.ejercicioRenumerar = null;
   }
 
   /** Handler cuando se hace click en "Cerrar" */

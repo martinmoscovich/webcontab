@@ -40,6 +40,14 @@ public class Ejercicio extends PersistentEntity {
 	@NotNull
 	private LocalDate finalizacion;
 	
+	/** 
+	 * Fecha hasta la cual estan <b>confirmados</b> los asientos <b>(inclusive)</b>.
+	 * <br>No se pueden crear ni modificar asientos hasta esa fecha.
+	 * Se ejecuta al renumerar y busca evitar que cambien los numeros de los asientos hasta 
+	 * esa fecha. 
+	 */
+	private LocalDate fechaConfirmada;
+	
 	/** Indica si el ejercicio finalizo */
 	private boolean finalizado;
 	
@@ -53,7 +61,12 @@ public class Ejercicio extends PersistentEntity {
 	private Long asientoRefundicionId;
 	
 	public Ejercicio(Organizacion organizacion, LocalDate inicio, LocalDate finalizacion) {
-		this(organizacion, inicio, finalizacion, false, null, null, null);
+		this(organizacion, inicio, finalizacion, null, false, null, null, null);
+	}
+	
+	/** Indica si el ejercicio pertenece a la organizacion especificada */
+	public boolean perteceneA(Organizacion organizacion) {
+		return this.getOrganizacion().getId().equals(organizacion.getId());
 	}
 	
 	/** Valida que el ejercicio este activo */
@@ -61,18 +74,33 @@ public class Ejercicio extends PersistentEntity {
 		if(this.isFinalizado()) throw new EjercicioFinalizadoException(this);
 	}
 	
+	/** 
+	 * Valida que la fecha especificada este dentro del ejercicio y sea posterior a la confirmada (si existe). 
+	 */
+	public void validateFecha(LocalDate date) throws EjercicioFechaInvalidaException {
+		if(!this.esFechaDentroDelEjercicio(date)) throw EjercicioFechaInvalidaException.fueraDelEjercicio(this, date); 
+		if(!this.esFechaHabilitada(date)) throw EjercicioFechaInvalidaException.fechaConfirmada(this, date);
+	}
+	
 	/** Determina si la fecha especificada esta dentro del ejercicio */
-	public boolean esFechaValida(LocalDate date) {
+	private boolean esFechaDentroDelEjercicio(LocalDate date) {
 		return (!date.isBefore(this.inicio)) && (!date.isAfter(this.finalizacion));
 	}
 	
-	/** Valida que la fecha especificada este dentro del ejercicio */
-	public void validateFecha(LocalDate date) throws EjercicioFechaInvalidaException {
-		if(!this.esFechaValida(date)) throw new EjercicioFechaInvalidaException(this, date); 
+	/**
+	 * Determina si la fecha esta habilitada dentro del ejercicio (para crear o modificar asientos).
+	 * Solo se pueden crear o modificar asientos posteriores a la fecha de confirmacion
+	 */
+	private boolean esFechaHabilitada(LocalDate date) {
+		// Si no hay fecha confirmada, siempre estara habilitada
+		if(this.fechaConfirmada == null) return true;
+		
+		// Esta habilitada si es posterior a la fecha confirmada
+		return date.isAfter(this.fechaConfirmada);
 	}
 	
-	/** Indica si el ejercicio pertenece a la organizacion especificada */
-	public boolean perteceneA(Organizacion organizacion) {
-		return this.getOrganizacion().getId().equals(organizacion.getId());
+	@Override
+	public String toString() {
+		return String.format("Ejercicio [%s, periodo: %s -> %s]", organizacion, inicio, finalizacion);  
 	}
 }

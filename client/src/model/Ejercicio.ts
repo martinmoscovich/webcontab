@@ -12,6 +12,13 @@ export interface Ejercicio extends IdModel {
   /** Fecha de fin */
   finalizacion: Date;
 
+  /**
+   * Fecha hasta la cual estan confirmados los asientos.
+   * Ningun asiento se puede crear, modificar o eliminar hasta esta fecha inclusive.
+   * Es opcional. Si no existe, aun no se confirmo ningun asiento
+   */
+  fechaConfirmada?: Date;
+
   /** Organizacion a la que pertenece */
   organizacion: Organizacion;
 
@@ -28,6 +35,7 @@ export function mapEjercicicioFromServer(json: any): Ejercicio {
   return {
     ...json,
     inicio: parseServerDate(json.inicio as string),
-    finalizacion: parseServerDate(json.finalizacion as string)
+    finalizacion: parseServerDate(json.finalizacion as string),
+    fechaConfirmada: parseServerDate(json.fechaConfirmada as string)
   };
 }

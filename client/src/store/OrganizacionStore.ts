@@ -17,6 +17,8 @@ import { BaseSimpleStore } from '@/store/BaseSimpleStore';
 import { logError } from '@/utils/log';
 import { Action, Module, Mutation, RegisterOptions } from 'vuex-class-modules';
 import { byId } from '@/utils/array';
+import { asientoStore } from '@/store';
+import { formatDate } from '@/utils/date';
 
 /**
  * Store que maneja y cachea organizaciones y ejercicios.
@@ -80,10 +82,11 @@ export class OrganizacionStore extends BaseSimpleStore<Organizacion> {
     try {
       this.crearEjercicioRequest();
       const ejercicio = await organizacionApi.crearEjercicio(payload);
-      this.crearEjercicioSuccess({
-        ejercicio,
-        cerrarUltimo: payload.cerrarUltimo
-      });
+
+      // Como al crear un ejercicio se puede haber cerrado el anterior, se vuelve a cargar la lista
+      // de ejercicios
+      this.findEjercicios(ejercicio.organizacion);
+      this.crearEjercicioSuccess(payload.cerrarUltimo);
     } catch (e) {
       this.crearEjercicioError(e);
       throw e;
@@ -138,6 +141,38 @@ export class OrganizacionStore extends BaseSimpleStore<Organizacion> {
     }
   }
 
+  /**
+   * Renumera los asientos de un ejercicio y los confirma hasta la fecha indicada.
+   * @param ejercicio
+   */
+  @Action
+  async confirmarAsientosDelEjercicio(payload: { ejercicio: Ejercicio; fecha: Date }) {
+    try {
+      this.confirmarAsientosDelEjercicioRequest();
+
+      // Se confirman y renumeran los asientos
+      const result = await organizacionApi.confirmarAsientosDelEjercicio(payload.ejercicio, payload.fecha);
+
+      // Se resetea la cache de asientos, ya que cambiaron de numero
+      asientoStore.reset();
+
+      this.confirmarAsientosDelEjercicioSuccess(result);
+    } catch (e) {
+      this.confirmarAsientosDelEjercicioError(e);
+      throw e;
+    }
+  }
+
+  /**
+   * Agrega un ejercicio al store.
+   * Se llama desde el Store de session para registrar el ejercicio
+   * actual dentro del store.
+   */
+  @Mutation
+  agregarAStore(ejercicio: Ejercicio) {
+    entitySuccessInList(this.ejercicios, ejercicio);
+  }
+
   @Mutation
   private findEjerciciosRequest() {
     listRequest(this.ejercicios);
@@ -159,12 +194,11 @@ export class OrganizacionStore extends BaseSimpleStore<Organizacion> {
   }
 
   @Mutation
-  private crearEjercicioSuccess(payload: { ejercicio: Ejercicio; cerrarUltimo: boolean }) {
-    entitySuccessInList(this.ejercicios, payload.ejercicio);
+  private crearEjercicioSuccess(cerrarUltimo: boolean) {
     notificationService.show({
-      message: 'Se creó el nuevo ejercicio' + (payload.cerrarUltimo ? ' y se cerró el anterior' : ''),
+      message: 'Se creó el nuevo ejercicio' + (cerrarUltimo ? ' y se cerró el anterior' : ''),
       type: 'success',
-      duration: payload.cerrarUltimo ? 5000 : undefined
+      duration: cerrarUltimo ? 5000 : undefined
     });
   }
 
@@ -220,11 +254,6 @@ export class OrganizacionStore extends BaseSimpleStore<Organizacion> {
   }
 
   @Mutation
-  agregarAStore(ejercicio: Ejercicio) {
-    entitySuccessInList(this.ejercicios, ejercicio);
-  }
-
-  @Mutation
   private reabrirEjercicioSuccess(ejercicio: Ejercicio) {
     entitySuccessInList(this.ejercicios, ejercicio);
     notificationService.success('Se reabrió el ejercicio');
@@ -234,6 +263,27 @@ export class OrganizacionStore extends BaseSimpleStore<Organizacion> {
   private reabrirEjercicioError(error: WebContabError) {
     listFail(this.ejercicios);
     logError('reabrir ejercicio', error);
+    notificationService.error(error);
+  }
+
+  @Mutation
+  private confirmarAsientosDelEjercicioRequest() {
+    listRequest(this.ejercicios);
+  }
+
+  @Mutation
+  private confirmarAsientosDelEjercicioSuccess(ejercicio: Ejercicio) {
+    entitySuccessInList(this.ejercicios, ejercicio);
+    notificationService.success(
+      'Se renumeraron los asientos del ejercicio y se confirmaron hasta la fecha ' +
+        formatDate(ejercicio.fechaConfirmada)
+    );
+  }
+
+  @Mutation
+  private confirmarAsientosDelEjercicioError(error: WebContabError) {
+    listFail(this.ejercicios);
+    logError('confirmar asientos de ejercicio', error);
     notificationService.error(error);
   }
 }

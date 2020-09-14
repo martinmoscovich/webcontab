@@ -168,7 +168,8 @@ public class AsientoService {
 	 * @return
 	 * @throws InvalidRequestException si falla la validacion
 	 * @throws EjercicioFinalizadoException si el ejercicio ya termino
-	 * @throws EjercicioFechaInvalidaException si la fecha no esta dentro del ejercicio
+	 * @throws EjercicioFechaInvalidaException si la fecha no esta dentro del ejercicio 
+	 * o es anterior a la confirmada del ejercicio (no se pueden crear asientos).
 	 */
 	@Transactional
 	public Asiento crear(Asiento asiento, Ejercicio ejercicio)
@@ -179,8 +180,8 @@ public class AsientoService {
 		asiento.setId(null);
 		asiento.setEjercicio(ejercicio);
 
-		// Se chequean los datos basicos del asiento (pero no los saldos aun)
-		asiento.validar(false);
+		// Se chequean los datos basicos del asiento y sus imputaciones (pero no los saldos aun)
+		asiento.validar(true, false);
 
 		// Se asocian las imputaciones a las cuentas persistidas
 		List<Imputacion> imputaciones = asiento.getImputaciones();
@@ -205,7 +206,8 @@ public class AsientoService {
 	 * @throws EntityNotFoundException si no existe el asiento
 	 * @throws InvalidRequestException si hay algun error de validacion
 	 * @throws EjercicioFinalizadoException si el ejercicio ya finalizo (no se puede modificar)
-	 * @throws EjercicioFechaInvalidaException si la fecha del asiento no esta dentro del ejercicio
+	 * @throws EjercicioFechaInvalidaException si la fecha del asiento no esta dentro del ejercicio o 
+	 * la fecha actual o la nueva son anteriores a la confirmada (no se puede modificar)
 	 */
 	@Transactional
 	public Asiento actualizar(Ejercicio ejercicio, Asiento asiento) throws EntityNotFoundException, InvalidRequestException, EjercicioFinalizadoException, EjercicioFechaInvalidaException {
@@ -213,10 +215,17 @@ public class AsientoService {
 
 		// No se puede modificar un asiento luego de finalizado el ejercicio
 		existing.getEjercicio().validateActivo();
+		
+		// No se puede modificar si esta dentro de los confirmados (se usa la fecha original del asiento).
+		ejercicio.validateFecha(existing.getFecha());
 
 		// Se actualizan los datos del asiento
 		existing.setFecha(asiento.getFecha());
 		existing.setDetalle(asiento.getDetalle());
+		
+		// Se chequean los datos basicos del asiento con la nueva fecha y detalle
+		// Aun no se validan las imputciones y saldos porque todavia no se hizo el merge
+		existing.validar(false, false);
 
 		// Se actualizan las imputaciones: se agregan las nuevas, se actualizan las existentes
 		// y se obtienen las que hay que borrar
@@ -224,7 +233,7 @@ public class AsientoService {
 
 		// Se valida el asiento incluyendo el saldo, ya que estan cargadas las
 		// imputaciones con sus cuentas y monedas
-		existing.validar(true);
+		existing.validar(true, true);
 
 		// Se eliminan las imputaciones que se quitaron
 		imputacionService.eliminar(imputacionesABorrar);
@@ -240,13 +249,17 @@ public class AsientoService {
 	 * @param id
 	 * @throws EntityNotFoundException si no existe el asiento
 	 * @throws EjercicioFinalizadoException si el ejercicio ya finalizo (no se puede modificar)
+	 * @throws EjercicioFechaInvalidaException si el asiento esta dentro de los confirmados (no se puede modificar)
 	 */
 	@Transactional
-	public void eliminar(Ejercicio ejercicio, Long id) throws EntityNotFoundException, EjercicioFinalizadoException {
+	public void eliminar(Ejercicio ejercicio, Long id) throws EntityNotFoundException, EjercicioFinalizadoException, EjercicioFechaInvalidaException {
 		Asiento asiento = this.getByIdOrThrow(ejercicio, id, false);
 
 		// No se puede eliminar un asiento luego de finalizado el ejercicio
-		asiento.getEjercicio().validateActivo();
+		ejercicio.validateActivo();
+		
+		// No se puede eliminar un asiento si esta dentro de los confirmados.
+		ejercicio.validateFecha(asiento.getFecha());
 		
 		// Elimina las imputaciones del asiento
 		imputacionService.eliminarByAsiento(asiento);
@@ -258,18 +271,28 @@ public class AsientoService {
 	/**
 	 * Elimina los asientos indicados y sus imputaciones.
 	 * <p>Es similar a ejecutar {@link #eliminar(Ejercicio, Long)} para cada id, pero optimizado.</p>
-	 * <p>Se ejecuta una query por cada asiento para eliminar sus imputaciones, pero todos los asientos se eliminan en una sola.</p>
+	 * <p>Se ejecuta una query por cada asiento para eliminar sus imputaciones, pero todos los asientos se obtienen en una y se eliminan en otra.</p>
 	 * @param ejercicio
 	 * @param ids lista de ids de asientos
+	 * @param ignorarConfirmacion si es true, se ignorara que los asientos esten dentro de los confirmados (util para reabrir ejercicios)
+	 * 
 	 * @throws EjercicioFinalizadoException si el ejercicio esta finalizado
+	 * @throws EjercicioFechaInvalidaException si algun asiento esta dentro de los confirmados (no se puede modificar)
 	 */
 	@Transactional
-	public void eliminar(Ejercicio ejercicio, Set<Long> ids) throws EjercicioFinalizadoException {
+	public void eliminar(Ejercicio ejercicio, Set<Long> ids, boolean ignorarConfirmacion) throws EjercicioFinalizadoException, EjercicioFechaInvalidaException {
 		// No se puede eliminar un asiento luego de finalizado el ejercicio
 		ejercicio.validateActivo();
 		
-		// Se eliminan las imputaciones de todos los asientos
-		for(Long id : ids) imputacionService.eliminarByAsiento(asientoDao.getOne(id));
+		// Se recorren los asientos
+		for(Asiento asiento : asientoDao.findByIds(ejercicio, ids)) {
+			
+			// No se puede eliminar un asiento si esta dentro de los confirmados.
+			if(!ignorarConfirmacion) ejercicio.validateFecha(asiento.getFecha());
+			
+			// Se eliminan las imputaciones de todos los asientos
+			imputacionService.eliminarByAsiento(asiento);
+		}
 		
 		// Se eliminan los asientos
 		asientoDao.deleteByIds(ejercicio, ids);
@@ -287,6 +310,16 @@ public class AsientoService {
 	public void eliminarTodos(Ejercicio ejercicio) {
 		imputacionService.eliminarByEjercicio(ejercicio);
 		asientoDao.deleteByEjercicio(ejercicio);
+	}
+	
+	/**
+	 * Renumera los asientos de un ejercicio por fecha primero y por orden de creacion despues.
+	 * @param ejercicio
+	 */
+	@Transactional
+	public void renumerarAsientos(Ejercicio ejercicio) {
+		log.info("Se renumeran por fecha los asientos del {}", ejercicio);
+		asientoDao.renumerarByEjercicio(ejercicio.getId());
 	}
 	
 	/**

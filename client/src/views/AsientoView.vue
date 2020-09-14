@@ -51,6 +51,7 @@ import { isNotFound } from '../core/ajax/error';
 import { focus } from '../utils/browser';
 import { Route } from 'vue-router';
 import { asientoApi } from '@/api';
+import { isEqualOrBefore, addDays } from '@/utils/date';
 
 /**
  * Guard que detecta cuando cambia la url, ya sea para cambiar de pagina o para ver otro asiento
@@ -135,9 +136,29 @@ export default class AsientoView extends Vue {
     return routerService.isCurrent(this.$route, routerService.nuevoAsiento());
   }
 
-  /** Indica si el usuario actual no puede modificar asientos */
+  /**
+   * Indica si el usuario actual no puede modificar el asiento.
+   * Debe tener permisos y el ejercicio debe estar abierto.
+   * Ademas, si es una modificacion o baja, debe ser un asiento posterior a la fecha confirmada si existe.
+   */
   private get readonly() {
-    return sessionStore.asientosReadonly;
+    // Si el usuario no puede modificar asientos en el ejercicio, devolver true
+    if (sessionStore.asientosReadonly) return true;
+
+    // Si puede modificar y es nuevo, puede crear (aunque solo a posterior a la fecha confirmada)
+    if (this.isNew) return false;
+
+    // Si aun no se cargo el asiento, no hay nada que editar
+    if (!this.asiento) return true;
+
+    // Si puede modificar y esta editando uno existente, solo puede hacerlo si no esta dentro de los confirmados
+    const fechaConfirmada = sessionStore.ejercicio?.fechaConfirmada;
+
+    // Si no hay fecha confirmada, puede editar cualquiera
+    if (!fechaConfirmada) return false;
+
+    // Es readonly si la fecha del asiento es anterior o igual a la confirmada.
+    return isEqualOrBefore(this.asiento.fecha, fechaConfirmada);
   }
 
   /** Indica si se esta cargando el asiento */
@@ -151,7 +172,13 @@ export default class AsientoView extends Vue {
   }
 
   private get minDate() {
-    return sessionStore.ejercicio?.inicio;
+    if (!sessionStore.ejercicio) return undefined;
+
+    // Si hay fecha confirmada, la minima sera el dia siguiente de esta
+    if (sessionStore.ejercicio.fechaConfirmada) return addDays(sessionStore.ejercicio.fechaConfirmada, 1);
+
+    // Si no hay, sera la de inicio del ejercicio
+    return sessionStore.ejercicio.inicio;
   }
 
   private get maxDate() {
@@ -206,6 +233,7 @@ export default class AsientoView extends Vue {
       onConfirm: async () => {
         if (this.asiento) {
           await asientoStore.delete(this.asiento);
+          this.dirty = false;
           routerService.goToCategoria();
         }
       }
