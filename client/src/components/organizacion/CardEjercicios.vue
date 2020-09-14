@@ -18,6 +18,7 @@
       :readonly="readonly"
       mostarAcciones
       class="pa-2"
+      @renumerar="onRenumerar"
       @cerrar="onCerrar"
       @reabrir="onReabrir"
       @eliminar="onEliminar"
@@ -101,6 +102,11 @@ export default class CardEjercicios extends Vue {
   /** Handler cuando se selecciona un ejercicio */
   private onSelected(item: Ejercicio) {
     this.$emit('selected', item);
+  }
+
+  /** Handler del boton de renumerar ejercicio */
+  private onRenumerar(item: Ejercicio, fecha: Date) {
+    this.$emit('renumerar', item, fecha);
   }
 
   /** Handler del boton de cerrar ejercicio */
