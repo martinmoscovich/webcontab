@@ -2,6 +2,7 @@ package com.mmoscovich.webcontab.model;
 
 import java.math.BigDecimal;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
@@ -37,6 +38,7 @@ public class Imputacion extends PersistentEntity {
     private Cuenta cuenta;
 
     @NotNull
+    @Column(precision = 15, scale = 2)
     private BigDecimal importe;
     
     @NotEmpty
