@@ -60,14 +60,6 @@ public abstract class SimpleResource<T extends PersistentEntity, D> {
     protected abstract List<D> toDto(List<T> models);
     
     /**
-     * Obtiene una lista de todas las entidades
-     */
-    @GET
-    public List<D> list() {
-    	return toDto(getRepo().findAll());
-    }
-    
-    /**
      * Obtiene una entidad por ID
      * @param id
      * @return

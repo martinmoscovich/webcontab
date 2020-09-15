@@ -1,27 +1,29 @@
 <template>
-  <b-field>
+  <b-field style="justify-content: center;">
     <!-- DESDE -->
     <b-field label="Desde" label-position="on-border">
       <b-datepicker
         placeholder="Seleccione..."
+        :type="month ? 'month' : undefined"
         :value="value.desde"
-        @input="onDesdeInput"
         :min-date="minDate"
         :max-date="maxDate"
         :focused-date="value.desde || value.hasta || realFocusedDate"
+        @input="onDesdeInput"
       >
       </b-datepicker>
     </b-field>
 
     <!-- HASTA -->
-    <b-field label="Hasta" label-position="on-border">
+    <b-field label="Hasta" label-position="on-border" class="ml-2">
       <b-datepicker
         placeholder="Seleccione..."
+        :type="month ? 'month' : undefined"
         :value="value.hasta"
-        @input="onHastaInput"
         :min-date="minDate"
         :max-date="maxDate"
         :focused-date="value.hasta || value.desde || realFocusedDate"
+        @input="onHastaInput"
       >
       </b-datepicker>
     </b-field>
@@ -49,6 +51,10 @@ export default class PeriodoInput extends Vue {
   /** Fecha en la cual mostrar el foco */
   @Prop({ type: Date, default: () => new Date() })
   focusedDate: Date;
+
+  /** Indica si es solo seleccion de mes o de fecha completa */
+  @Prop({ type: Boolean })
+  month: boolean;
 
   /** Fecha que realmente se enfoca */
   private get realFocusedDate() {

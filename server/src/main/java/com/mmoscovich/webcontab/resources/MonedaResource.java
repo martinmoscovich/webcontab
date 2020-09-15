@@ -21,7 +21,7 @@ import com.mmoscovich.webcontab.model.Moneda;
 @Component
 @Path("/monedas")
 @Produces(MediaType.APPLICATION_JSON)
-public class MonedaResource extends SimpleResource<Moneda, Moneda> {
+public class MonedaResource extends ListableSimpleResource<Moneda, Moneda> {
 
 	@Inject
 	private MonedaRepository dao;
