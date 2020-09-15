@@ -109,8 +109,10 @@ export class NotificationService {
   private getMessageFromError(error: Error) {
     if (isRemoteError(error)) {
       switch (error.status) {
-        case 404:
+        case 404: {
+          if (error.code === 'rest_error') return 'Error al contactar al servidor';
           return error.description.substring(0, error.description.indexOf('con id'));
+        }
         case 500:
           return 'Error en el servidor';
       }
