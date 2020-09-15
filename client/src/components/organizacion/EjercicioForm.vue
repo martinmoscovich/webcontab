@@ -57,7 +57,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import { notificationService } from '@/service';
 import { required } from '@/utils/validation';
 import { Ejercicio } from '../../model/Ejercicio';
-import { formatDate } from '../../utils/date';
+import { formatDate, isBefore } from '../../utils/date';
 import { isNullOrUndefined } from '../../utils/general';
 import { Periodo } from '../../model/Periodo';
 import { FormValidation } from '@/model/FormValidation';
@@ -140,7 +140,9 @@ export default class EjercicioForm extends Vue {
   private async validate(): Promise<FormValidation> {
     if (!this.ejercicio) return { msg: 'Debe completar los datos' };
     if (!this.ejercicio.inicio || !this.ejercicio.finalizacion) return { msg: 'Ingrese el periodo' };
-
+    if (!isBefore(this.ejercicio.inicio, this.ejercicio.finalizacion)) {
+      return { msg: 'El inicio debe ser anterior a la finalizacion' };
+    }
     if (!this.isFirst && isNullOrUndefined(this.ejercicio.cerrarAnterior)) {
       return { msg: 'Indique si desea cerrar el ejercicio anterior' };
     }
