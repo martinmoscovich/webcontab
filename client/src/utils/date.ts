@@ -189,15 +189,62 @@ export function isEqualOrAfter(date1: Date, date2: Date): boolean {
   return !isBefore(date1, date2);
 }
 
+/**
+ * Agrega los segundos indicados a la fecha especificada
+ */
 export function addSeconds(date: Date, seconds: number): Date {
   return new Date(date.getTime() + seconds * 1000);
 }
+
+/**
+ * Agrega los minutos indicados a la fecha especificada
+ */
 export function addMinutes(date: Date, minutes: number): Date {
   return addSeconds(date, minutes * 60);
 }
+
+/**
+ * Agrega las horas indicadas a la fecha especificada
+ */
 export function addHours(date: Date, hours: number): Date {
   return addMinutes(date, hours * 60);
 }
+
+/**
+ * Agrega los dias indicados a la fecha especificada
+ */
 export function addDays(date: Date, days: number): Date {
   return addHours(date, days * 24);
+}
+
+/**
+ * Agrega los meses indicados a la fecha especificada.
+ * Se usa el constructor ya que los meses pueden tener distinta cantidad de dias.
+ */
+export function addMonths(date: Date, months: number): Date {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth() + months,
+    date.getDate(),
+    date.getHours(),
+    date.getMinutes(),
+    date.getSeconds(),
+    date.getMilliseconds()
+  );
+}
+
+/**
+ * Agrega los anios indicados a la fecha especificada.
+ * Se usa el constructor ya que los anios bisiestos tienen distinta cantidad de dias
+ */
+export function addYears(date: Date, years: number): Date {
+  return new Date(
+    date.getFullYear() + years,
+    date.getMonth(),
+    date.getDate(),
+    date.getHours(),
+    date.getMinutes(),
+    date.getSeconds(),
+    date.getMilliseconds()
+  );
 }
