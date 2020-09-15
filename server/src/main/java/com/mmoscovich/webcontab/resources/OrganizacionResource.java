@@ -64,7 +64,6 @@ public class OrganizacionResource extends SimpleResource<Organizacion, Organizac
 	private SessionService session;
 	
 	@GET
-	@Override
     public List<Organizacion> list() {
 		// Si es admin puede ver todas
 		if(session.isAdmin()) return orgDao.findAll();

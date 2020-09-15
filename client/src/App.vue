@@ -69,6 +69,12 @@ export default class App extends Vue {
           icon: 'cog',
           label: 'Ajustes',
           to: routerService.adminAjustes()
+        },
+        {
+          name: 'Inflacion',
+          icon: 'cash-multiple',
+          label: 'Inflacion',
+          to: routerService.inflacion()
         }
         // {
         //   name: "ListaProvincias",
