@@ -104,7 +104,7 @@ export abstract class BaseSimpleStore<T extends IdModel> extends VuexModule {
   private async crear(item: T) {
     try {
       this.crearRequest();
-      item = await this.api.crear(item);
+      item = await this.api.create(item);
       this.crearSuccess(item);
     } catch (e) {
       this.crearError(e);
@@ -129,7 +129,7 @@ export abstract class BaseSimpleStore<T extends IdModel> extends VuexModule {
     try {
       if (!item?.id) return;
       this.eliminarRequest();
-      await this.api.borrar(item.id);
+      await this.api.delete(item.id);
       this.eliminarSuccess(item);
     } catch (e) {
       this.eliminarError(e);
