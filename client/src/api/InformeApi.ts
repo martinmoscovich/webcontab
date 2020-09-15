@@ -88,10 +88,6 @@ export class InformeApi {
    */
   getMayor(cuentaId: number, opts: AsientosSearchOptions): Promise<ImputacionesCuenta> {
     const qs: Dictionary<string | number> = searchOptionsToQuerystring(opts);
-    // ...paginationAndSortToQuerystring(opts.pagination, opts.sort),
-    // ...asientoApi.filterToQuerystring(opts.filter),
-    //   cuenta: cuentaId
-    // };
     qs.cuenta = cuentaId;
     if (!qs.size) qs.size = 15;
 
