@@ -30,7 +30,8 @@ export class CuentaApi {
       activa: cuenta.activa,
       individual: cuenta.individual,
       ajustable: cuenta.ajustable,
-      balanceaResultados: cuenta.balanceaResultados
+      balanceaResultados: cuenta.balanceaResultados,
+      balanceaAjustables: cuenta.balanceaAjustables
     };
     return this.http.put(`${BASE_URL}/${cuenta.id}`, payload).then(toEntity(mapCuenta));
   }

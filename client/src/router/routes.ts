@@ -7,6 +7,7 @@ import CategoriaView from '@/views/CategoriaView.vue';
 import CuentaView from '@/views/CuentaView.vue';
 import LoginView from '@/views/LoginView.vue';
 import ProvinciasView from '@/views/ProvinciasView.vue';
+import InflacionView from '@/views/InflacionView.vue';
 import MonedasView from '@/views/MonedasView.vue';
 import UsuariosView from '@/views/UsuariosView.vue';
 import { SecureRouteConfig } from './RouteSecurity';
@@ -100,6 +101,12 @@ export default [
     name: 'DetalleMoneda',
     component: MonedasView,
     meta: { path: ['Monedas'], auth: ['ADMIN'] }
+  },
+  {
+    path: '/admin/inflacion',
+    name: 'Inflacion',
+    component: InflacionView,
+    meta: { auth: ['ADMIN'] }
   },
   {
     path: '/admin/usuarios',

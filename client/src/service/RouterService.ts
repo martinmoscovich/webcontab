@@ -11,6 +11,7 @@ const LOGIN_ROUTE: Location = { name: 'Login' };
 const VER_ASIENTO_ROUTE: Location = { name: 'DetalleAsiento' };
 const NUEVO_ASIENTO_ROUTE: Location = { name: 'NuevoAsiento' };
 const LISTA_PROVINCIAS_ROUTE: Location = { name: 'ListaProvincias' };
+const INFLACION_ROUTE: Location = { name: 'Inflacion' };
 const LISTA_USUARIOS_ROUTE: Location = {
   name: 'ListaUsuarios'
 };
@@ -180,6 +181,9 @@ export class RouterService {
   }
   goToMonedas() {
     router.push(this.monedas());
+  }
+  inflacion() {
+    return INFLACION_ROUTE;
   }
   usuarios() {
     return LISTA_USUARIOS_ROUTE;

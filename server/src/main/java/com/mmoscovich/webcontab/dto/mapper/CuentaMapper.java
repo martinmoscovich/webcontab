@@ -48,6 +48,7 @@ public interface CuentaMapper {
 	@Mapping(target = "monedaId", ignore = true)
 	@Mapping(target = "path", ignore = true)
 	@Mapping(target = "balanceaResultados", ignore = true)
+	@Mapping(target = "balanceaAjustables", ignore = true)
 	@Mapping(source = "categoria", target = "tipo")
 	@Mapping(source = "categoria.id", target = "categoriaId")
 	CuentaDTO toDto(Categoria categoria);
@@ -69,6 +70,7 @@ public interface CuentaMapper {
 	@Mapping(target = "individual", ignore = true)
 	@Mapping(target = "monedaId", ignore = true)
 	@Mapping(target = "balanceaResultados", ignore = true)
+	@Mapping(target = "balanceaAjustables", ignore = true)
 	@Mapping(source = "c", target = "path")
 	@Mapping(source = "c", target = "tipo")
 	@Mapping(source = "categoria.id", target = "categoriaId")

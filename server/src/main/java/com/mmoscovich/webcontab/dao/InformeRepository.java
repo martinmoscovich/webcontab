@@ -33,6 +33,7 @@ import com.mmoscovich.webcontab.dao.helper.QueryBalance;
 import com.mmoscovich.webcontab.dao.helper.QueryBalance.FiltroBalance;
 import com.mmoscovich.webcontab.dto.AsientoFilter;
 import com.mmoscovich.webcontab.dto.informes.BalanceCuenta;
+import com.mmoscovich.webcontab.dto.informes.BalanceMensualCuenta;
 import com.mmoscovich.webcontab.model.Asiento;
 import com.mmoscovich.webcontab.model.Asiento_;
 import com.mmoscovich.webcontab.model.Categoria;
@@ -224,6 +225,17 @@ public class InformeRepository {
 	public Stream<BalanceCuenta> streamBalance(FiltroBalance filtro) {
 		QueryBalance query = new QueryBalance(filtro);
 		return query.stream(em, 500);
+	}
+	
+	/**
+	 * Obtiene un stream completo del balance <b>POR MES</b> (saldo por cuenta), permitiendo filtrar tanto las cuentas como el saldo.
+	 * @param filtro filtro de cuentas e imputaciones a incluir
+	 * @return
+	 */
+	@Transactional(readOnly = true)
+	public Stream<BalanceMensualCuenta> streamBalanceMensual(FiltroBalance filtro) {
+		QueryBalance query = new QueryBalance(filtro);
+		return query.streamMensual(em, 500);
 	}
 	
 	

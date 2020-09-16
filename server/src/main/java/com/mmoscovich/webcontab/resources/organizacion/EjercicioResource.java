@@ -80,6 +80,18 @@ public class EjercicioResource {
 	}
 	
 	/**
+	 * Crea el asiento de ajuste por inflacion del ejercicio
+	 * @return el ejercicio actualizado con el id del asiento de ajuste
+	 * @throws EntityNotFoundException si no se encuentra el ejercicio en la organizacion actual
+	 * @throws OrganizacionNoSeleccionadaException si no se selecciono organizacion
+	 */
+	@PUT
+	@Path("{id}/inflacion")
+	public Ejercicio ajustarPorInflacion(@PathParam("id") @Min(1) Long id) throws EntityNotFoundException, OrganizacionNoSeleccionadaException {
+		return service.ajustarPorInflacion(this.getById(id));
+	}
+	
+	/**
 	 * Renumera los asientos de un ejercicio y establece o actualiza la fecha de confirmacion de asientos del ejercicio.
 	 * <p>Se renumeran <b>TODOS</b> los asientos del ejercicio.
 	 * <br>La fecha se utiliza para establecer hasta que fecha estan <b>confirmados</b> los asientos.
