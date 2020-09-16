@@ -9,6 +9,8 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { monedaStore } from '@/store';
+import { Moneda } from '@/model/Moneda';
+import { ListItemPredicate } from '@/utils/array';
 
 /**
  * Select de Monedas
@@ -23,9 +25,19 @@ export default class MonedaSelect extends Vue {
   @Prop({ type: Boolean })
   readonly: boolean;
 
-  /** Lista de monedas */
+  /**
+   * Funcion que permite filtrar las monedas a mostrar.
+   * Si no se define, no se filtran.
+   */
+  @Prop({ type: Function, required: false })
+  filterFn?: ListItemPredicate<Moneda>;
+
+  /** Lista de monedas filtrada con la function provista */
   private get lista() {
-    return monedaStore.lista.items;
+    // Si no se paso una funcion del filtrado, se devuelve la lista completa
+    if (!this.filterFn) return monedaStore.lista.items;
+
+    return monedaStore.lista.items.filter(this.filterFn);
   }
 
   /** Indica si se estan cargando las monedas */

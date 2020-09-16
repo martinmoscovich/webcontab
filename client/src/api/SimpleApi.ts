@@ -1,19 +1,45 @@
 import { toEntity, toList, queryString, searchOptionsToQuerystring, toPage } from '@/core/ajax/helpers';
-import { IdModel } from '@/model/IdModel';
+import { IdModel, hasId } from '@/model/IdModel';
 import { AxiosInstance } from 'axios';
 import { SearchOptions, Sort } from '@/core/ajax/model';
 import Page from '@/core/Page';
+import { OptionalId, WithoutId } from '@/core/TypeHelpers';
+
+interface ApiConfig<T extends IdModel> {
+  /** URL Base de la API (se concatena al configurado para el HttpClient) */
+  baseUrl: string;
+
+  /**
+   * URL especifica para la busqueda con filtros, orden y paginacion.
+   * Si es la misma que para list() o no se usa, no es necesario definirla.
+   */
+  searchUrl?: string;
+
+  /**
+   * Funcion que mapea el json del servidor al tipo utilizado en el cliente.
+   *
+   * Se usa para mapear **un solo item**.
+   * Cuando se mapean listas o paginas, se llama una vez para cada item.
+   *
+   * Es opcional. Si no se define, se utiliza el JSON como viene.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mapper?: (json: any) => T;
+
+  /**
+   * Funcion que mapea una entidad del cliente al JSON que espera el servidor.
+   *
+   * Es opcional. Si no se define, se envia como esta.
+   */
+  upstreamMaper?: (entity: OptionalId<T>) => unknown;
+}
 
 /**
  * API generica para hacer ABM simples.
  * Incluye logica para listar todos, obtener uno por id, crear, actualizar y borrar
  */
 export class SimpleApi<T extends IdModel> {
-  constructor(
-    protected http: AxiosInstance,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private config: { baseUrl: string; searchUrl?: string; mapper?: (json: any) => T }
-  ) {}
+  constructor(protected http: AxiosInstance, private config: ApiConfig<T>) {}
 
   /**
    * Lista de los items.
@@ -42,22 +68,29 @@ export class SimpleApi<T extends IdModel> {
   }
 
   /** Crea un nuevo item */
-  create(entity: T): Promise<T> {
-    return this.http.post(this.config.baseUrl, entity).then(toEntity(this.config.mapper));
+  create(entity: WithoutId<T>): Promise<T> {
+    return this.http.post(this.config.baseUrl, this.mapToJson(entity)).then(toEntity(this.config.mapper));
   }
 
   /** Actualiza un item existente */
   update(entity: T) {
-    return this.http.put(`${this.config.baseUrl}/${entity.id}`, entity).then(toEntity(this.config.mapper));
+    return this.http
+      .put(`${this.config.baseUrl}/${entity.id}`, this.mapToJson(entity))
+      .then(toEntity(this.config.mapper));
   }
 
   /** Crea o actualiza un item segun si ya tiene id o no */
-  save(entity: T) {
-    return entity.id ? this.update(entity) : this.create(entity);
+  save(entity: OptionalId<T>) {
+    return hasId(entity) ? this.update(entity as T) : this.create(entity);
   }
 
   /** Elimina un item */
   async delete(id: number) {
     await this.http.delete(`${this.config.baseUrl}/${id}`);
+  }
+
+  /** Convierte el item al formato JSON requerido por el server, caso de haber un mapper definido */
+  private mapToJson(entity: OptionalId<T>): unknown {
+    return this.config.upstreamMaper?.(entity) ?? entity;
   }
 }
