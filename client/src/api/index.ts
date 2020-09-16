@@ -12,7 +12,7 @@ import { AdminApi } from '@/api/AdminApi';
 import { ImportAPI } from '@/api/ImportApi';
 import { UserApi } from '@/api/UserApi';
 import { LoginApi } from '@/api/LoginApi';
-import { InflacionMes, mapInflacionFromServer } from '@/model/InflacionMes';
+import { InflacionMes, mapInflacionFromServer, mapInflacionToServer } from '@/model/InflacionMes';
 
 // API publica
 const publicClient = HttpClient.create({});
@@ -35,7 +35,10 @@ export const userApi = new UserApi(httpClient);
 export const importApi = new ImportAPI(httpClient);
 export const provinciaApi = new SimpleApi<Provincia>(httpClient, { baseUrl: '/provincias' });
 export const monedaApi = new SimpleApi<Moneda>(httpClient, { baseUrl: '/monedas' });
+
+/** Inflacion API */
 export const inflacionApi = new SimpleApi<InflacionMes>(httpClient, {
   baseUrl: '/admin/inflacion',
-  mapper: mapInflacionFromServer
+  mapper: mapInflacionFromServer,
+  upstreamMaper: mapInflacionToServer
 });

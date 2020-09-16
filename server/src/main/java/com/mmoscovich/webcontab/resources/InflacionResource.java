@@ -1,7 +1,6 @@
 package com.mmoscovich.webcontab.resources;
 
 import java.time.YearMonth;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,12 +51,11 @@ public class InflacionResource extends SimpleResource<InflacionMes, InflacionMes
 	
 	/**
      * Busca los indices de inflacion dentro del periodo especificado.
-     * <p>Los que no encuentra, los devuelve igual con indice = 0</p>
      * 
      * @param filter filtro de periodo y moneda 
      * 
      * @return lista de indices de inflacion para el periodo y moneda indicados
-     * @throws InvalidRequestException si no se encuentra la moneda
+     * @throws InvalidRequestException si no se encuentra la moneda o no es ajustable
      */
     @GET
     public List<InflacionMes> search(@Valid @BeanParam InflacionFilter filter) throws InvalidRequestException {
@@ -68,24 +66,7 @@ public class InflacionResource extends SimpleResource<InflacionMes, InflacionMes
     	PeriodoMensual periodo = this.buildPeriodo(filter);
     	
     	// Se buscan los persistidos
-    	List<InflacionMes> persistidos = dao.findByMonedaAndPeriodo(moneda, periodo.getDesde().atDay(1), periodo.getHasta().atEndOfMonth());
-    	
-    	// Resultado a devolver
-    	List<InflacionMes> result = new ArrayList<>();
-    	
-    	// Se iteran todos los meses pedidos (esten o no en la base)
-    	// Se inicia "desde" y se incrementa de a un mes hasta que el actual sobrepase a "hasta"
-    	YearMonth mes = periodo.getDesde();
-    	while(!mes.isAfter(periodo.getHasta())) {
-    		// Si el mes estaba persistido, se agrega ese.
-    		// Si no, se agrega uno con indice 0.
-    		result.add(filterByMes(persistidos, mes).orElse(new InflacionMes(moneda, mes)));
-    		
-    		// Se suma un mes
-    		mes = mes.plusMonths(1);
-    	}
-    	
-    	return result;
+    	return dao.findByMonedaAndPeriodo(moneda, periodo.getDesde().atDay(1), periodo.getHasta().atEndOfMonth());
     }
     
     /**
@@ -95,18 +76,26 @@ public class InflacionResource extends SimpleResource<InflacionMes, InflacionMes
      * @param monedaId id de moneda a buscar o <code>null</code> para usar el default.
      * @return la instancia persistida de la moneda
      * 
-     * @throws EntityNotFoundException si no existe moneda con ese id o no hay default
+     * @throws EntityNotFoundException si no existe moneda con ese id, no hay default o la moneda encontrada no es ajustable
      */
     private Moneda getMonedaOrThrow(Long monedaId) throws EntityNotFoundException {
-    	Optional<Moneda> result = monedaId != null ? 
-    			// Si se indico un id se busca esa moneda
-    			monedaDao.findById(monedaId) : 
-
-    			// Si no, se busca la default
-				monedaDao.findAll().stream().filter(Moneda::isDefault).findFirst(); 
+    	Optional<Moneda> result;
     	
+    	if(monedaId != null) {
+    		// Si se indico un id se busca esa moneda
+    		result = monedaDao.findById(monedaId);
+    	} else {
+    		// Si no, se busca la default
+    		result = monedaDao.findAll().stream().filter(Moneda::isDefault).findFirst(); 
+    	}
+
     	// Si no se encontro, lanzar error
-		return result.orElseThrow(() -> new EntityNotFoundException("No se encontro la moneda deseada"));
+		Moneda moneda = result.orElseThrow(() -> new EntityNotFoundException("No se encontro la moneda deseada"));
+		
+		// Si la moneda no es ajustable, lanzar error
+    	if(!moneda.isAjustable()) throw new InvalidRequestException("La moneda " + moneda.getCodigo() + " no es ajustable por inflacion");
+    	
+    	return moneda;
     }
     
     /**
@@ -137,19 +126,6 @@ public class InflacionResource extends SimpleResource<InflacionMes, InflacionMes
     	return periodo;
     }
     
-    /**
-     * Busca un indice de la lista en base al mes
-     * @param items
-     * @param mes
-     * @return
-     */
-    private Optional<InflacionMes> filterByMes(List<InflacionMes> items, YearMonth mes) {
-    	for(InflacionMes item : items) {
-    		if(item.getYearMonth().equals(mes)) return Optional.of(item);
-    	}
-    	return Optional.empty();
-    }
-
 	@Override
 	protected JpaRepository<InflacionMes, Long> getRepo() {
 		return dao;
@@ -163,7 +139,11 @@ public class InflacionResource extends SimpleResource<InflacionMes, InflacionMes
 	@Override
 	protected void updateItem(InflacionMes existing, InflacionMes modified) {
 		// Solo se permite modificar el indice
-    	if(modified.getIndice() != null) existing.setIndice(modified.getIndice());
+    	if(modified.getIndice() != null) {
+    		if(modified.getIndice().signum() <= 0) throw new InvalidRequestException("El indice debe ser un numero mayor a cero");
+    		
+    		existing.setIndice(modified.getIndice());
+    	}
 	}
 	
 	@Override
@@ -172,6 +152,8 @@ public class InflacionResource extends SimpleResource<InflacionMes, InflacionMes
 
 	@Override
 	protected void beforeCreate(InflacionMes entity) {
+		if(entity.getIndice().signum() <= 0) throw new InvalidRequestException("El indice debe ser un numero mayor a cero");
+		
 		// Se asocia a la moneda persistida o lanza error si no existe
 		entity.setMoneda(this.getMonedaOrThrow(entity.getMoneda().getId()));
 	}

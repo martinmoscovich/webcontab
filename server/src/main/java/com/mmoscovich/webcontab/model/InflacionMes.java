@@ -11,10 +11,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PositiveOrZero;
+import javax.validation.constraints.Positive;
 import javax.validation.groups.Default;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.mmoscovich.webcontab.json.OnlyIdSerializer;
@@ -46,7 +45,6 @@ public class InflacionMes extends PersistentEntity {
 	
 	/** Mes */
     @NotNull
-    @JsonIgnore
     private LocalDate mes;
     
     /** Moneda a la que pertenece este indice */
@@ -57,20 +55,9 @@ public class InflacionMes extends PersistentEntity {
     
     /** Indice del mes */
     @NotNull
-    @PositiveOrZero(groups = {Default.class, CreateValidation.class, UpdateValidation.class})
+    @Positive(groups = {Default.class, CreateValidation.class, UpdateValidation.class})
     @Column(precision = 11, scale = 4)
     private BigDecimal indice;
-    
-    /**
-     * Crea un indice de inflacion mensual de 0.
-     * @param moneda
-     * @param mes
-     */
-    public InflacionMes(Moneda moneda, YearMonth mes) {
-    	this.moneda = moneda;
-    	this.mes = mes.atDay(1);
-    	this.indice = BigDecimal.ZERO;
-    }
     
     /**
      * Obtiene una instancia de {@link YearMonth} a partir del mes.
@@ -82,4 +69,11 @@ public class InflacionMes extends PersistentEntity {
     	return YearMonth.from(this.mes);
     }
     
+    /**
+     * Guarda la instancia de {@link LocalDate} a partir del mes indicado, usando el primer dia del mes.
+     */
+    @JsonProperty("mes")
+    public void setYearMonth(YearMonth mes) {
+    	this.mes = mes.atDay(1);
+    }
 }

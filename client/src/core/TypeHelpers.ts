@@ -1,3 +1,5 @@
+import { IdModel } from '@/model/IdModel';
+
 /**
  * Tipo que devuelve una lista de nombres de propiedades de T que son del tipo O.
  *
@@ -29,3 +31,13 @@ export type KeysNotOfType<T, O> = {
 export type Nullable<T> = {
   [P in keyof T]: T[P] | null;
 };
+
+/**
+ * Tipo que remueve el id de otro tipo
+ */
+export type WithoutId<T extends IdModel> = Omit<T, 'id'>;
+
+/**
+ * Tipo que hace opcional el id en otro tipo
+ */
+export type OptionalId<T extends IdModel> = WithoutId<T> & Partial<IdModel>;

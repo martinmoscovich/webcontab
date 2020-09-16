@@ -10,7 +10,7 @@
   >
     <template slot-scope="props">
       <!-- Columna Mes -->
-      <b-table-column field="mes" label="Mes">
+      <b-table-column field="mes" label="Mes" :class="{ 'has-text-danger': !props.row.indice }">
         {{ formatMonth(props.row.mes) }}
       </b-table-column>
 
@@ -59,7 +59,7 @@ import { prettyFormatDate } from '@/utils/date';
  * Tabla que permite ver y editar los indices de inflacion
  */
 @Component({
-  validators: { 'selected.indice': number({ required: true, min: 0 }) }
+  validators: { 'selected.indice': number({ required: true, greaterThan: 0 }) }
 })
 export default class TablaInflacion extends Vue {
   @Prop({ type: Array })
@@ -97,6 +97,7 @@ export default class TablaInflacion extends Vue {
 
     await this.$nextTick();
     (this.$refs.txtIndice.$el as HTMLElement).focus();
+    (this.$refs.txtIndice.$el as HTMLInputElement).select();
   }
 
   /** Handler cuando se guarda un indice */
@@ -105,7 +106,7 @@ export default class TablaInflacion extends Vue {
       this.$emit('change', this.selected);
       this.selected = null;
     } else {
-      notificationService.warn('Ingrese los campos correctamente');
+      notificationService.warn('El índice debe ser un número mayor a cero');
     }
   }
 
