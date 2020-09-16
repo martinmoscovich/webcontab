@@ -10,7 +10,7 @@
       v-else
       v-for="item in sortedEjercicios"
       :key="item.id"
-      class="panel-block"
+      class="panel-block ejercicio-item"
       :class="{ finalizado: item.finalizado, hand: !esSeleccionado(item) }"
       @click="onItemClick(item)"
     >
@@ -22,38 +22,18 @@
       {{ formatDate(item.inicio) }} - {{ formatDate(item.finalizacion) }}
 
       <!-- Acciones -->
-      <template v-if="mostarAcciones">
+      <template v-if="mostarAcciones && !readonly">
         <div style="flex-grow: 1" />
-        <b-button
-          v-if="!item.finalizado && !readonly"
-          @click.stop="onInflacion(item)"
-          size="is-small"
-          type="is-warning"
-          class="mr-1"
-          >Inflación</b-button
-        >
-        <b-button
-          v-if="!item.finalizado && !readonly"
-          @click.stop="onRenumerar(item)"
-          size="is-small"
-          type="is-info"
-          class="mr-1"
-          >Renumerar</b-button
-        >
-        <b-button v-if="!item.finalizado && !readonly" @click.stop="onCerrar(item)" size="is-small" type="is-primary"
-          >Cerrar</b-button
-        >
-        <b-button v-else-if="!readonly" @click.stop="onReabrir(item)" size="is-small" type="is-primary"
-          >Reabrir</b-button
-        >
-        <b-button
-          v-if="!readonly"
-          @click.stop="onEliminar(item)"
-          class="ml-1"
-          size="is-small"
-          type="is-danger"
-          icon-right="delete"
-        ></b-button>
+
+        <!-- Menu de acciones posibles para un ejercicio -->
+        <EjercicioActions
+          :finalizado="item.finalizado"
+          @renumerar="onRenumerar(item)"
+          @inflacion="onInflacion(item)"
+          @cerrar="onCerrar(item)"
+          @reabrir="onReabrir(item)"
+          @eliminar="onEliminar(item)"
+        />
 
         <ModalRenumerarEjercicio
           :ejercicio="ejercicioRenumerar"
@@ -67,6 +47,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import ModalRenumerarEjercicio from './ModalRenumerarEjercicio.vue';
+import EjercicioActions from './EjercicioActions.vue';
 import { Ejercicio } from '@/model/Ejercicio';
 import { formatDate } from '@/utils/date';
 import { buildCompareFn } from '@/utils/array';
@@ -74,7 +55,7 @@ import { sessionStore } from '@/store';
 import { notificationService } from '@/service';
 
 /** Lista de ejercicios de una organizacion */
-@Component({ components: { ModalRenumerarEjercicio } })
+@Component({ components: { EjercicioActions, ModalRenumerarEjercicio } })
 export default class EjerciciosList extends Vue {
   @Prop()
   ejercicios: Ejercicio[];
@@ -219,5 +200,14 @@ export default class EjerciciosList extends Vue {
 }
 .finalizado {
   background: #e2e2e2;
+}
+.ejercicio-item {
+  .menuitem-text {
+    margin-left: 8px;
+  }
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
 }
 </style>
