@@ -51,6 +51,7 @@ public class CuentaDTO {
     private Boolean individual;
     private Boolean ajustable;
     private Boolean balanceaResultados;
+    private Boolean balanceaAjustables;
     
     // De Categoria
     private Boolean resultado;

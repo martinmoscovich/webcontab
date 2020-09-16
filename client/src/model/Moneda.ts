@@ -18,4 +18,7 @@ export interface Moneda extends IdModel {
    * Las nuevas cuentas tendran por default esta moneda.
    */
   default: boolean;
+
+  /** Indica que la moneda se debe ajustar por inflacion */
+  ajustable: boolean;
 }

@@ -101,6 +101,14 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
 	public List<Cuenta> findCuentasQueBalanceanResultados(Organizacion org) {
 		return dao.findCuentasQueBalanceanResultados(org);
 	}
+	
+	/** 
+	 * Obtiene todas las cuentas de la organizacion que balancean las ajustables por inflacion (una por moneda).
+	 * <br>Se usa para el ajuste por inflacion. 
+	 */
+	public List<Cuenta> findCuentasQueBalanceanAjustables(Organizacion org) {
+		return dao.findCuentasQueBalanceanAjustables(org);
+	}
 
     /**
      * Crea una cuenta en la organizacion
@@ -155,12 +163,23 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
     	if(cuenta.getIndividual() != null) existing.setIndividual(cuenta.getIndividual());
     	
     	// Flag de cuenta ajustable
-    	if(cuenta.getAjustable() != null) existing.setAjustable(cuenta.getAjustable());
+    	if(cuenta.getAjustable() != null) {
+    		existing.setAjustable(cuenta.getAjustable());
+    		
+    		// Si se puso en ajustable pero la moneda no lo es, lanza error
+    		if(existing.getAjustable() && !existing.getMoneda().isAjustable()) throw new InvalidRequestException("La cuenta no puede ser ajustable porque su moneda no lo es");
+    	}
     	
     	// Flag de cuenta que balancea resultados 
     	// Se hace luego de actualizar la moneda, ya que debe desactivar la anterior
     	if(cuenta.getBalanceaResultados() != null) {
     		this.validarYCompletarBalanceadoraDeResultados(existing, cuenta.getBalanceaResultados());
+    	}
+    	
+    	// Flag de cuenta que balancea ajustables 
+    	// Se hace luego de actualizar la moneda, ya que debe desactivar la anterior
+    	if(cuenta.getBalanceaAjustables() != null) {
+    		this.validarYCompletarBalanceadoraDeAjustables(existing, cuenta.getBalanceaAjustables());
     	}
     	
     	return dao.save(existing);
@@ -190,13 +209,22 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
     	if(cuenta.getMoneda() == null) throw new InvalidRequestException("Debe completar la moneda de la cuenta");
     	cuenta.setMoneda(monedaDao.findById(cuenta.getMoneda().getId()).orElseThrow(() -> new EntityNotFoundException(Moneda.class, cuenta.getMoneda().getId())));
 
-    	if(cuenta.getAjustable() == null) cuenta.setAjustable(false);
     	if(cuenta.getIndividual() == null) cuenta.setIndividual(false);
     	
+    	if(cuenta.getAjustable() == null) cuenta.setAjustable(false);
+    	
+    	// Si la cuenta es ajustable pero la moneda no, lanzar error
+    	if(cuenta.getAjustable() && !cuenta.getMoneda().isAjustable()) throw new InvalidRequestException("La cuenta no puede ser ajustable porque su moneda no lo es");
+    	
     	// Determina si esta cuenta balancea resultados
-    	boolean balancea = cuenta.getBalanceaResultados() == null ? false : cuenta.getBalanceaResultados(); 
+    	boolean balanceaResultados = cuenta.getBalanceaResultados() == null ? false : cuenta.getBalanceaResultados(); 
     	// Actualiza el flag de balanceo, validando que la cuenta lo pueda usar y actualizando las otras cuentas si es necesario 
-		this.validarYCompletarBalanceadoraDeResultados(cuenta, balancea);
+		this.validarYCompletarBalanceadoraDeResultados(cuenta, balanceaResultados);
+		
+		// Determina si esta cuenta balancea ajustables
+    	boolean balanceaAjustables = cuenta.getBalanceaAjustables() == null ? false : cuenta.getBalanceaAjustables(); 
+    	// Actualiza el flag de balanceo, validando que la cuenta lo pueda usar y actualizando las otras cuentas si es necesario 
+		this.validarYCompletarBalanceadoraDeAjustables(cuenta, balanceaAjustables);
     }
     
     /**
@@ -208,18 +236,44 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
      * </p>
      * @param cuenta cuenta a actualizar
      * @param valor valor del flag
+     * @throws InvalidRequestException si la cuenta no puede balancear resultados
      */
-    private void validarYCompletarBalanceadoraDeResultados(Cuenta cuenta, boolean valor) {
+    private void validarYCompletarBalanceadoraDeResultados(Cuenta cuenta, boolean valor) throws InvalidRequestException{
     	// Si se modifico y se puso en false, solo se actualiza
 		// Si se puso en true:
 		// - Se verfica que se pueda usar esa cuenta
 		// - Se desactiva cualquier otra cuenta de la org como balanceadora para esa moneda
 		if(valor) {
-			this.validarCuentaPuedeBalancear(cuenta);
-			this.desactivaCuentaBalanceadora(cuenta.getOrganizacion(), cuenta.getMoneda());
+			this.validarCuentaPuedeBalancearResultados(cuenta);
+			this.desactivaCuentaBalanceadoraResultados(cuenta.getOrganizacion(), cuenta.getMoneda());
 		}
 		
 		cuenta.setBalanceaResultados(valor);
+    }
+    
+    /**
+     * Valida que la cuenta pueda tomar el valor requerido del flag "balancea ajustables" y actualiza
+     * el resto de las cuentas balanceadoras si es necesario.
+     * <p>
+     * Si el valor es false, siempre es valido y se actualiza solo esta cuenta.
+     * <br>Si el valor es true, se comprueba que la cuenta pueda balancear y se le quita el flag a la cuenta que lo tenia.
+     * </p>
+     * @param cuenta cuenta a actualizar
+     * @param valor valor del flag
+     */
+    private void validarYCompletarBalanceadoraDeAjustables(Cuenta cuenta, boolean valor) {
+    	// Si se modifico y se puso en false, solo se actualiza
+		// Si se puso en true:
+		// - Se verfica que se pueda usar esa cuenta (no debe ser ajustable y la moneda debe serlo)
+		// - Se desactiva cualquier otra cuenta de la org como balanceadora para esa moneda
+		if(valor) {
+			if(!cuenta.getMoneda().isAjustable()) throw new InvalidRequestException("La cuenta no puede balancear ajustables porque su moneda no es ajustable");
+			if(Boolean.TRUE.equals(cuenta.getAjustable())) throw new InvalidRequestException("La cuenta no puede balancear ajustables ya que es una de ellas");
+				
+			this.desactivaCuentaBalanceadoraAjustables(cuenta.getOrganizacion(), cuenta.getMoneda());
+		}
+		
+		cuenta.setBalanceaAjustables(valor);
     }
     
     /**
@@ -254,8 +308,9 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
      * Determina si esta cuenta puede balancear resultados.
      * <br>Para ello NO debe ser descendiente de una categoria de resultados.
      * @param cuenta
+     * @throws InvalidRequestException si la cuenta no puede balancear resultados
      */
-    private void validarCuentaPuedeBalancear(Cuenta cuenta) {
+    private void validarCuentaPuedeBalancearResultados(Cuenta cuenta) throws InvalidRequestException {
     	// Buscar las cuentas de resultados
     	List<Categoria> categorias = this.catService.findCategoriasDeResultados(cuenta.getOrganizacion());
     	
@@ -270,7 +325,7 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
      * @param org organizacion en la que buscar
      * @param moneda moneda que debe tener la cuenta
      */
-    private void desactivaCuentaBalanceadora(Organizacion org, Moneda moneda) {
+    private void desactivaCuentaBalanceadoraResultados(Organizacion org, Moneda moneda) {
     	// Obtiene las cuentas que balancean resultados
     	this.findCuentasQueBalanceanResultados(org).stream()
     	// Busca la cuenta que tiene la moneda deseada
@@ -281,6 +336,35 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
     		c.setBalanceaResultados(false);
     		dao.save(c);
     	});
+    }
+
+    /**
+     * Desactiva el flag "balancea ajustables" de la cuenta con la moneda especificada en la organizacion 
+     * @param org organizacion en la que buscar
+     * @param moneda moneda que debe tener la cuenta
+     */
+    private void desactivaCuentaBalanceadoraAjustables(Organizacion org, Moneda moneda) {
+    	// Obtiene las cuentas que balancean resultados
+    	this.findCuentasQueBalanceanAjustables(org).stream()
+    	// Busca la cuenta que tiene la moneda deseada
+    	.filter(c -> c.getMoneda().getId().equals(moneda.getId()))
+    	.findFirst()
+    	// Si existe una cuenta, quitarle el flag de balanceadora
+    	.ifPresent(c -> {
+    		c.setBalanceaAjustables(false);
+    		dao.save(c);
+    	});
+    }
+    
+    /**
+     * Desactiva el flag "ajustable" y "balance ajustables" en todas las cuentas asociadas a la moneda especificada.
+     * <p>Afecta a las cuentas de <b>TODAS</b> las organizaciones.</p>
+     * <p>Util cuando una moneda deja de ser "ajustable".</p>
+     * @param moneda
+     */
+    @Transactional
+    public void desactivarCuentasAjustablesYBalanceadora(Moneda moneda) {
+    	dao.desactivarCuentasAjustablesYBalanceadora(moneda);
     }
     
 //	@Override

@@ -52,11 +52,16 @@ public class Moneda extends PersistentEntity {
     @Column(unique = true)
     private boolean isDefault;
     
-    public Moneda(String nombre, String simbolo, String codigo, boolean isDefault) {
+    /** Indica que la moneda se debe ajustar por inflacion */
+    @NotNull
+    private boolean ajustable;
+    
+    public Moneda(String nombre, String simbolo, String codigo, boolean isDefault, boolean ajustable) {
     	this.nombre = nombre;
     	this.simbolo = simbolo;
     	this.codigo = codigo;
     	this.isDefault = isDefault;
+    	this.ajustable = ajustable;
     }
     
 }
