@@ -27,6 +27,7 @@
           :allow-negative="false"
           :distraction-free="true"
           @keydown.native.enter="onSaveItem"
+          @keydown.native.tab="onTab"
           @keydown.native.esc="onCancelItem"
         />
         <template v-else> {{ props.row.indice }}</template>
@@ -48,7 +49,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 import { Focusable } from '@/utils/browser';
 import { number } from '@/utils/validation';
 import { notificationService } from '@/service';
@@ -68,7 +69,7 @@ export default class TablaInflacion extends Vue {
   @Prop({ type: Boolean })
   loading: boolean;
 
-  /** Indice seleccionado */
+  /** Item seleccionado */
   private selected: InflacionMes | null = null;
 
   $refs: { txtIndice: Focusable & Vue };
@@ -87,6 +88,38 @@ export default class TablaInflacion extends Vue {
     return prettyFormatDate(date, { shortMonth: false }).substring(2);
   }
 
+  /**
+   * Selecciona el item que esta a la distancia especificada desde el seleccionado
+   * Si no hay seleccionado, se considera el primero como seleccionado.
+   * @param step distancia a moverse, puede ser negativa para ir hacia atras
+   */
+  private goTo(step: number) {
+    // Si hay un item seleccionado, se toma su indice.
+    // Si no, se toma el primer item
+    const index = this.selected ? this.indices.findIndex(indice => this.isSelected(indice)) : 0;
+
+    const target = index + step;
+    if (target >= 0 && target < this.indices.length) this.onSelected(this.indices[target]);
+  }
+
+  /** Handler cuando cambia el status de "cargando" */
+  @Watch('loading')
+  private onLoadingChange() {
+    // Solo nos interesa cuando dejo de cargar
+    if (this.loading) return;
+
+    // Si hay seleccionado, ya se guardo, se elige el proximo
+    if (this.selected) this.goTo(1);
+  }
+
+  /** Handler cuando cambia la lista */
+  @Watch('indices')
+  private onListChange(current: InflacionMes[], old: InflacionMes[]) {
+    // Si la lista cambio de tamaño, significa que se cargo por primera vez o cambio el filtro.
+    // Se selecciona el primer item
+    if (current.length && old.length !== current.length) this.goTo(0);
+  }
+
   /** Handler cuando se hace click en un item */
   private async onSelected(row: InflacionMes) {
     // Si ya esta seleccionado, no se hace nada
@@ -101,13 +134,18 @@ export default class TablaInflacion extends Vue {
   }
 
   /** Handler cuando se guarda un indice */
-  async onSaveItem() {
+  private async onSaveItem() {
     if (await this.$validate()) {
       this.$emit('change', this.selected);
-      this.selected = null;
     } else {
       notificationService.warn('El índice debe ser un número mayor a cero');
     }
+  }
+
+  /** Handler cuando se presiona Tab */
+  private onTab(e: KeyboardEvent) {
+    e.preventDefault();
+    this.goTo(e.shiftKey ? -1 : 1);
   }
 
   /** Handler cuando se hace click fuera del componente */
