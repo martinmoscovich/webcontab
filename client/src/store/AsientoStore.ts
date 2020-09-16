@@ -86,6 +86,11 @@ export class AsientoStore extends VuexModule {
   }
 
   @Mutation
+  clearAsientoFromCache(id: number) {
+    this.asientos.items = this.asientos.items.filter(item => item.id !== id);
+  }
+
+  @Mutation
   private saveRequest() {
     listRequest(this.asientos);
   }

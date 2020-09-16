@@ -131,7 +131,8 @@ export function paginationToQuerystring(pagination?: PageRequest) {
  * Genera el mapa para QS a partir de un RequestOptions
  * @param requestOptions
  */
-function requestOptionsToQuerystring(requestOptions: RequestOptions) {
+function requestOptionsToQuerystring(requestOptions?: RequestOptions) {
+  if (!requestOptions) return {};
   const qs: Dictionary<string> = {
     ...paginationToQuerystring(requestOptions.pagination),
     ...sortToQuerystring(requestOptions.sort)
@@ -144,7 +145,8 @@ function requestOptionsToQuerystring(requestOptions: RequestOptions) {
  * Genera el mapa para QS a partir de un SearchOptions
  * @param requestOptions
  */
-export function searchOptionsToQuerystring(opts: SearchOptions<any>) {
+export function searchOptionsToQuerystring(opts?: Partial<SearchOptions<any>>) {
+  if (!opts) return {};
   return {
     ...requestOptionsToQuerystring(opts),
     ...toQuerystringDictionary(opts.filter)

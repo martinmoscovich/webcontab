@@ -20,6 +20,7 @@ import com.mmoscovich.webcontab.jaxrs.WebContabParamConverterProvider;
 import com.mmoscovich.webcontab.resources.CurrentUserResource;
 import com.mmoscovich.webcontab.resources.FirstTimeResource;
 import com.mmoscovich.webcontab.resources.ImportResource;
+import com.mmoscovich.webcontab.resources.InflacionResource;
 import com.mmoscovich.webcontab.resources.MonedaResource;
 import com.mmoscovich.webcontab.resources.OrganizacionResource;
 import com.mmoscovich.webcontab.resources.ProvinciaResource;
@@ -62,6 +63,7 @@ public class RestConfig extends ResourceConfig {
         register(UserResource.class);
         register(CurrentUserResource.class);
         register(FirstTimeResource.class);
+        register(InflacionResource.class);
         
         // Providers
         register(WebContabParamConverterProvider.class);
