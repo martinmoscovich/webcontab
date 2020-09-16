@@ -43,10 +43,15 @@
         </Field>
       </div>
 
-      <!-- Switch Default -->
       <div class="column is-narrow">
+        <!-- Switch Default -->
         <Field style="margin-top: 5px">
           <b-switch v-model="moneda.default">Default</b-switch>
+        </Field>
+
+        <!-- Switch Ajustable -->
+        <Field style="margin-top: 5px">
+          <b-switch v-model="moneda.ajustable">Ajustable</b-switch>
         </Field>
       </div>
     </div>
@@ -65,7 +70,8 @@ import { Moneda } from '@/model/Moneda';
     'moneda.nombre': required,
     'moneda.codigo': required,
     'moneda.simbolo': required,
-    'moneda.default': field
+    'moneda.default': field,
+    'moneda.ajustable': field
   }
 })
 export default class MonedaForm extends Vue {
@@ -109,7 +115,8 @@ export default class MonedaForm extends Vue {
         codigo: '',
         nombre: '',
         simbolo: '',
-        default: false
+        default: false,
+        ajustable: false
       };
       this.isNew = true;
     }

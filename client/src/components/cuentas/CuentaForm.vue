@@ -59,13 +59,18 @@
         </Field>
 
         <!-- Ajustable -->
-        <Field class="mt-1">
+        <Field v-if="monedaAjustable" class="mt-1">
           <b-switch v-model="cuenta.ajustable" :disabled="readonly">Ajustable</b-switch>
         </Field>
 
         <!-- Balancea Resultados -->
         <Field class="mt-1">
           <b-switch v-model="cuenta.balanceaResultados" :disabled="readonly">Balancea Result.</b-switch>
+        </Field>
+
+        <!-- Balancea Ajustables -->
+        <Field v-if="monedaAjustable" class="mt-1">
+          <b-switch v-model="cuenta.balanceaAjustables" :disabled="readonly">Balancea Ajustables</b-switch>
         </Field>
       </div>
     </div>
@@ -115,7 +120,8 @@ import { FormValidation } from '@/model/FormValidation';
     'cuenta.individual': field,
     'cuenta.ajustable': field,
     'cuenta.activa': field,
-    'cuenta.balanceaResultados': field
+    'cuenta.balanceaResultados': field,
+    'cuenta.balanceaAjustables': field
   }
 })
 export default class CuentaForm extends Vue {
@@ -193,6 +199,7 @@ export default class CuentaForm extends Vue {
         ajustable: false,
         individual: false,
         balanceaResultados: false,
+        balanceaAjustables: false,
         numero: this.calcularNuevoNumero()
       };
       this.codigoPadre = this.parent?.codigo;
@@ -225,6 +232,16 @@ export default class CuentaForm extends Vue {
   private get moneda() {
     if (!this.cuenta.monedaId) return null;
     return monedaStore.find(this.cuenta.monedaId);
+  }
+
+  /**
+   * Indica si la moneda actual de la cuenta es ajustable.
+   *
+   * Se utiliza para determinar si se deben mostrar
+   * los switches de "ajustable" y "balancea ajustables".
+   */
+  private get monedaAjustable() {
+    return this.moneda?.ajustable ?? false;
   }
 
   /**

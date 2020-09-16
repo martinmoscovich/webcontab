@@ -59,13 +59,18 @@ export interface Cuenta extends CuentaBase {
    */
   individual: boolean;
 
-  /** Ajustable? */
+  /** Indica si la cuenta debe incluirse en el asiento de ajuste por inflacion */
   ajustable: boolean;
 
   /**
    * Indica si es una cuenta que se utiliza en el asiento de refundicion para balancear los resultados
    */
   balanceaResultados: boolean;
+
+  /**
+   * Indica si es la cuenta que se utiliza en el asiento de ajuste por inflacion para balancear las cuentas ajustables.
+   */
+  balanceaAjustables: boolean;
 }
 
 export type CuentaOCategoria = Cuenta | Categoria;
