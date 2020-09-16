@@ -212,6 +212,41 @@ public class EjercicioService {
 
 		return dao.save(ej);
 	}
+	
+	/**
+	 * Crea o recalcula y actualiza el asiento de ajuste por inflacion del ejercicio.
+	 * 
+	 * @param ej ejercicio en el cual crear o actualizar el asiento de ajuste
+	 * 
+	 * @return el ejercicio ajustado
+	 */
+	@Transactional
+	public Ejercicio ajustarPorInflacion(Ejercicio ej) {
+		Optional<Asiento> inflacion;
+		
+		if(ej.getAsientoAjusteId() == null) {
+			// Si el ejercicio NO tiene asiento de ajuste, se intenta crea
+			inflacion = asientoService.crearAjustePorInflacion(ej);
+			
+			// Si no se creo el asiento, devuelve el mismo ejercicio sin modificar
+			if(inflacion.isEmpty()) return ej;
+			
+			// Se asigna el id del asiento de ajuste en el ejercicio
+			ej.setAsientoAjusteId(inflacion.get().getId());
+			
+		} else {
+			// Si el ejercicio ya tiene asiento se ajuste, se busca
+			Asiento ajuste = asientoService.getByIdOrThrow(ej, ej.getAsientoAjusteId(), false);
+			
+			// Se actualiza
+			inflacion = asientoService.actualizarAjustePorInflacion(ajuste);
+			
+			// Si se elimino, se borra el id del ejercicio
+			if(inflacion.isEmpty()) ej.setAsientoAjusteId(null);
+		}
+		
+		return dao.save(ej);
+	}
 
 	/**
 	 * Renumera los asientos de un ejercicio y establece o actualiza la fecha de confirmacion de asientos del ejercicio.

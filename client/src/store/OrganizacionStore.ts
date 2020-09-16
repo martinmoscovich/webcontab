@@ -12,7 +12,7 @@ import {
 } from '@/core/ui/state/list';
 import { Ejercicio } from '@/model/Ejercicio';
 import { Organizacion } from '@/model/Organizacion';
-import { notificationService } from '@/service';
+import { notificationService, routerService } from '@/service';
 import { BaseSimpleStore } from '@/store/BaseSimpleStore';
 import { logError } from '@/utils/log';
 import { Action, Module, Mutation, RegisterOptions } from 'vuex-class-modules';
@@ -163,6 +163,26 @@ export class OrganizacionStore extends BaseSimpleStore<Organizacion> {
     }
   }
 
+  @Action
+  async ajustarPorInflacion(ejercicio: Ejercicio) {
+    try {
+      this.ajustarPorInflacionRequest();
+
+      // Se guarda el id del asiento de ajuste (si existe)
+      const asientoId = ejercicio.asientoAjusteId;
+
+      const result = await organizacionApi.ajustarEjercicioPorInflacion(ejercicio);
+
+      // Si habia asiento de ajuste, se lo quita de la cache
+      if (asientoId) asientoStore.clearAsientoFromCache(asientoId);
+
+      this.ajustarPorInflacionSuccess(result);
+    } catch (e) {
+      this.ajustarPorInflacionError(e);
+      throw e;
+    }
+  }
+
   /**
    * Agrega un ejercicio al store.
    * Se llama desde el Store de session para registrar el ejercicio
@@ -284,6 +304,32 @@ export class OrganizacionStore extends BaseSimpleStore<Organizacion> {
   private confirmarAsientosDelEjercicioError(error: WebContabError) {
     listFail(this.ejercicios);
     logError('confirmar asientos de ejercicio', error);
+    notificationService.error(error);
+  }
+
+  @Mutation
+  private ajustarPorInflacionRequest() {
+    listRequest(this.ejercicios);
+  }
+
+  @Mutation
+  private ajustarPorInflacionSuccess(ejercicio: Ejercicio) {
+    entitySuccessInList(this.ejercicios, ejercicio);
+
+    if (!ejercicio.asientoAjusteId) return;
+
+    notificationService.show({
+      type: 'success',
+      message: 'Se generó el asiento de ajuste por inflación del ejercicio',
+      actionText: 'Ver',
+      to: routerService.asiento({ id: ejercicio.asientoAjusteId })
+    });
+  }
+
+  @Mutation
+  private ajustarPorInflacionError(error: WebContabError) {
+    listFail(this.ejercicios);
+    logError('ajustar por inflacion el ejercicio', error);
     notificationService.error(error);
   }
 }

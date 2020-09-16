@@ -20,12 +20,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mmoscovich.webcontab.dao.AsientoRepository;
 import com.mmoscovich.webcontab.dao.CuentaRepository;
+import com.mmoscovich.webcontab.dao.InflacionRepository;
 import com.mmoscovich.webcontab.dao.InformeRepository;
 import com.mmoscovich.webcontab.dao.helper.QueryBalance.FiltroBalance;
 import com.mmoscovich.webcontab.dto.informes.BalanceCuenta;
+import com.mmoscovich.webcontab.dto.informes.BalanceMensualCuenta;
 import com.mmoscovich.webcontab.exception.EjercicioFechaInvalidaException;
 import com.mmoscovich.webcontab.exception.EjercicioFinalizadoException;
 import com.mmoscovich.webcontab.exception.EntityNotFoundException;
+import com.mmoscovich.webcontab.exception.IndiceInflacionFaltante;
 import com.mmoscovich.webcontab.exception.InvalidRequestException;
 import com.mmoscovich.webcontab.model.Asiento;
 import com.mmoscovich.webcontab.model.Categoria;
@@ -61,6 +64,9 @@ public class AsientoService {
 	
 	@Inject
 	private CuentaRepository cuentaDao;
+	
+	@Inject
+	private InflacionRepository inflacionDao;
 
 	/**
 	 * Devuelve una pagina de asientos del ejercicio especificado, dentro del periodo indicado.
@@ -258,6 +264,9 @@ public class AsientoService {
 		// No se puede eliminar un asiento luego de finalizado el ejercicio
 		ejercicio.validateActivo();
 		
+		// No se pueden borrar los asientos especiales (apertura, cierre, etc)
+		ejercicio.validateAsientoBorrable(asiento);
+		
 		// No se puede eliminar un asiento si esta dentro de los confirmados.
 		ejercicio.validateFecha(asiento.getFecha());
 		
@@ -274,21 +283,26 @@ public class AsientoService {
 	 * <p>Se ejecuta una query por cada asiento para eliminar sus imputaciones, pero todos los asientos se obtienen en una y se eliminan en otra.</p>
 	 * @param ejercicio
 	 * @param ids lista de ids de asientos
-	 * @param ignorarConfirmacion si es true, se ignorara que los asientos esten dentro de los confirmados (util para reabrir ejercicios)
+	 * @param paraReapertura si es true, se estan borrando asientos para reapertura. Se ignoran algunos controles.
 	 * 
 	 * @throws EjercicioFinalizadoException si el ejercicio esta finalizado
 	 * @throws EjercicioFechaInvalidaException si algun asiento esta dentro de los confirmados (no se puede modificar)
 	 */
 	@Transactional
-	public void eliminar(Ejercicio ejercicio, Set<Long> ids, boolean ignorarConfirmacion) throws EjercicioFinalizadoException, EjercicioFechaInvalidaException {
+	public void eliminar(Ejercicio ejercicio, Set<Long> ids, boolean paraReapertura) throws EjercicioFinalizadoException, EjercicioFechaInvalidaException {
 		// No se puede eliminar un asiento luego de finalizado el ejercicio
 		ejercicio.validateActivo();
 		
 		// Se recorren los asientos
 		for(Asiento asiento : asientoDao.findByIds(ejercicio, ids)) {
 			
-			// No se puede eliminar un asiento si esta dentro de los confirmados.
-			if(!ignorarConfirmacion) ejercicio.validateFecha(asiento.getFecha());
+			if(!paraReapertura) {
+				// No se pueden borrar los asientos especiales (apertura, cierre, etc)
+				ejercicio.validateAsientoBorrable(asiento);
+				
+				// No se puede eliminar un asiento si esta dentro de los confirmados.
+				ejercicio.validateFecha(asiento.getFecha());
+			}
 			
 			// Se eliminan las imputaciones de todos los asientos
 			imputacionService.eliminarByAsiento(asiento);
@@ -332,7 +346,7 @@ public class AsientoService {
 	 */
 	@Transactional
 	public Asiento crearApertura(Ejercicio ejercicio, List<Imputacion> imputacionesCierreAnterior) {
-		log.info("Creando asiento de apertura del ejercicio de la organizacion {} y periodo [{} - {}]", ejercicio.getOrganizacion().getNombre(), ejercicio.getInicio(), ejercicio.getFinalizacion());
+		log.info("Creando asiento de apertura del  {}", ejercicio);
 		
 		// El nuevo asiento sera el 1, con fecha igual a la de inicio del ejercicio
 		Asiento apertura = new Asiento(ejercicio, (short)1, ejercicio.getInicio(), "Apertura de Libros", null);
@@ -414,7 +428,7 @@ public class AsientoService {
 	 */
 	@Transactional
 	public Asiento crearCierre(Ejercicio ejercicio, Short numeroAsiento) {
-		log.debug("Creando Asiento de Cierre de ejercicio para ejercicio {}", ejercicio);
+		log.debug("Creando Asiento de Cierre de ejercicio para {}", ejercicio);
 		
 		// El asiento tendra la fecha de finalizacion del ejercicio
 		Asiento asiento = new Asiento(ejercicio, numeroAsiento, ejercicio.getFinalizacion(), "Cierre de Libros", null);
@@ -448,7 +462,7 @@ public class AsientoService {
 	 */
 	@Transactional
 	public Optional<Asiento> crearRefundicion(Ejercicio ejercicio, Short numAsiento) {
-		log.debug("Calculando Asiento de refundicion de cuentas de resultado para ejercicio {}", ejercicio);
+		log.debug("Calculando Asiento de refundicion de cuentas de resultado para {}", ejercicio);
 		
 		// Se obtienen las cuentas que balancean resultados. Falla si no existen
 		List<Cuenta> balanceadoras = cuentaService.findCuentasQueBalanceanResultados(ejercicio.getOrganizacion());
@@ -469,13 +483,14 @@ public class AsientoService {
 			asiento.agregarImputacion(new Imputacion(cuentaDao.getOne(b.getId()), b.getSaldo().negate(), "Refundición de cuentas de resultado"));
 		});
 		
+		// Se obtienen la cantidad de cuentas de resultados con saldo <> 0
 		Integer cantCuentas = asiento.getImputaciones().size();
 		
 		// Aqui ya estan las imputaciones que hacen 0 los saldos de las cuentas de resultados
 		// Pero el asiento no tendra saldo 0, entonces se crean imputaciones a las cuentas "balanceadoras" (una por moneda) para
 		// llevar el asiento a saldo 0.
 		Map<Long, BigDecimal> saldos = asiento.getSaldos();
-		asiento.agregarImputaciones(this.crearImputacionesDeBalanceoDeResultados(balanceadoras, asiento.getSaldos()));
+		asiento.agregarImputaciones(this.crearImputacionesDeBalanceoDeResultados(balanceadoras, saldos));
 		
 		if(asiento.getImputaciones().isEmpty()) {
 			log.warn("Las cuentas de resultado tienen saldo en cero, no se genera el asiento de refundicion de cuentas de resultado");
@@ -492,28 +507,163 @@ public class AsientoService {
 	}
 	
 	/**
+	 * Crea el asiento de ajuste por inflacion, en caso de ser necesario.
+	 * <p>Si no hay cuentas ajustables o el saldo de todas es 0, no se crea el asiento.</p>
+	 * 
+	 * @param ejercicio ejercicio en el cual crear el asiento
+	 * 
+	 * @return optional con el asiento creado o vacio si no se creo.
+	 * 
+	 * @throws InvalidRequestException si no existen cuentas que balanceen a las ajustables para alguna moneda
+	 * @throws IndiceInflacionFaltante si falta el indice de inflacion para algun mes y moneda del ejercicio
+	 */
+	@Transactional
+	public Optional<Asiento> crearAjustePorInflacion(Ejercicio ejercicio) throws InvalidRequestException, IndiceInflacionFaltante {
+		log.debug("Creando asiento de ajuste por inflacion para {}", ejercicio);
+		
+		// Se instancia un nuevo asiento con la fecha de finalizacion del ejercicio
+		Asiento asiento = new Asiento(ejercicio, this.getProximoNumero(ejercicio), ejercicio.getFinalizacion(), "Ajuste por inflación", null);
+		
+		// Se calculan las imputaciones del asiento y, si existen, se guarda
+		if(this.completarAsientoDeAjustePorInflacion(asiento)) {
+			asiento = this.persistir(asiento);
+			log.info("Se creo el asiento de Ajuste por inflacion con numero {} y {} imputaciones", asiento.getNumero(), asiento.getImputaciones().size());
+			return Optional.of(asiento);
+		} else {
+			log.warn("No hay cuentas ajustables por inflacion o tienen saldo en cero, no se genera el asiento de ajuste");
+			return Optional.empty();
+		}
+	}
+	
+	/**
+	 * Recalcula y actualiza las imputaciones del asiento de ajuste por inflacion del ejercicio.
+	 * <p>Si no hay cuentas ajustables o el saldo de todas es 0, se elimina el asiento existente.</p>
+	 * 
+	 * @param asiento asiento a actualizar
+	 * @return optional con el asiento actualizado o vacio si se lo elimino.
+	 * 
+	 * @throws InvalidRequestException si no existen cuentas que balanceen a las ajustables para alguna moneda
+	 * @throws IndiceInflacionFaltante si falta el indice de inflacion para algun mes y moneda del ejercicio
+	 */
+	@Transactional
+	public Optional<Asiento> actualizarAjustePorInflacion(Asiento asiento) throws InvalidRequestException, IndiceInflacionFaltante {
+		log.debug("Actualizando asiento de ajuste por inflacion para {}", asiento.getEjercicio());
+		
+		// Se borran las imputaciones anteriores
+		imputacionService.eliminarByAsiento(asiento);
+		asiento.getImputaciones().clear();
+		
+		// Se regeneran las imputaciones y se persiste
+		if(this.completarAsientoDeAjustePorInflacion(asiento)) {
+			asiento = this.persistir(asiento);
+			log.info("Se recalculo el asiento de Ajuste por inflacion con numero {} y {} imputaciones", asiento.getNumero(), asiento.getImputaciones().size());
+			return Optional.of(asiento);
+		} else {
+			// Si devuelve el asiento vacio, se elimina el que existia
+			log.warn("Las cuentas ajustables por inflacion tienen saldo en cero, se elimina el asiento de ajuste");
+			asientoDao.delete(asiento);
+			
+			return Optional.empty();
+		}
+	}
+	
+	/**
+	 * Dado un asiento de ajuste por inflacion (nuevo o existente), calcula y agrega las imputaciones necesarias.
+	 * <p>
+	 * Para esto, busca los saldos mensuales de las cuentas ajustables, los acumula y ajusta por inflacion y 
+	 * genera una imputacion por cada uno con la diferencia entre el valor nominal y el valor ajustado.
+	 * </p>
+	 * <p>
+	 * Luego genera las imputaciones (una por moneda) para que este asiento quede balanceado (con saldo en cero).
+	 * </p>
+	 * @param asiento asiento a completar
+	 * @return <code>true</code> si el asiento tiene sentido (tiene imputaciones). <code>false</code> en caso contrario.
+	 * 
+	 * @throws InvalidRequestException si no hay cuentas que balanceen las ajustables (no se puede llevar el saldo a cero)
+	 * @throws IndiceInflacionFaltante si falta algun indice mensual de inflacion.
+	 */
+	private boolean completarAsientoDeAjustePorInflacion(Asiento asiento) throws InvalidRequestException, IndiceInflacionFaltante {
+		final Ejercicio ejercicio = asiento.getEjercicio();
+		
+		// Se obtienen las cuentas que balancean resultados. Falla si no existen
+		List<Cuenta> balanceadoras = cuentaService.findCuentasQueBalanceanAjustables(ejercicio.getOrganizacion());
+		if(balanceadoras.isEmpty()) throw new InvalidRequestException("No existen cuentas que balanceen a las ajustables");
+		
+		// Se buscan los saldos por mes de cada cuenta ajustable
+		FiltroBalance filtro = new FiltroBalance(ejercicio);
+		filtro.setSoloAjustables(true);
+		Stream<BalanceMensualCuenta> balance = informeDao.streamBalanceMensual(filtro);
+		
+		// Se crea un calculador de inflacion y se le pasa los indices dentro del periodo deseado
+		InflacionCalculator calculator = new InflacionCalculator(ejercicio, inflacionDao.findByPeriodo(ejercicio.getInicio(), ejercicio.getFinalizacion()));
+		
+		// Se acumulan los saldos
+		balance.forEach(calculator::add);
+
+		// Por cada cuenta, se obtiene la diferencia de saldo y se genera una imputacion
+		for(Long cuentaId : calculator.getCuentasIds()) {
+			BigDecimal importe = calculator.getDiferenciaAjuste(cuentaId);
+			
+			// Si el saldo es cero, no es necesario agregar la imputacion
+			if(importe.signum() != 0) {
+				asiento.agregarImputacion(new Imputacion(cuentaDao.getOne(cuentaId), importe, "Ajuste por inflación"));
+			}
+		}
+		
+		// Se obtienen la cantidad de cuentas ajustables con saldo <> 0
+		Integer cantCuentas = asiento.getImputaciones().size();
+		
+		// Si no hay imputaciones, devolver false, indicando que no tiene sentido el asiento
+		if(cantCuentas == 0) return false;
+		
+		// Se calculan las imputaciones para balancear el asiento (una por moneda)
+		Map<Long, BigDecimal> saldos = asiento.getSaldos();
+		asiento.agregarImputaciones(this.crearImputacionesDeBalanceo(balanceadoras, saldos, "las ajustables por inflacion", "Ajuste por inflación"));
+		
+		log.debug("Se encontraron {} cuentas ajustables con saldo <> 0 en el ejercicio y {} monedas distintas", cantCuentas, saldos.size());
+		
+		// Devolver true indicando que tiene sentido el asiento
+		return true;
+	}
+	
+	/**
 	 * Dado un conjunto de cuentas balanceadoras (una por moneda) y un conjunto de saldos (uno por moneda),
 	 * se crean las imputaciones en dichas cuentas para llevar los saldos a 0 (o sea se invierten).
 	 * @param cuentasBalanceadoras
 	 * @param saldos mapa cuya clave es el id de moneda y value es el saldo
+	 * @param tipo tipo de balanceo que hace la cuenta (ej "resultados" o "cuentas ajustables")
+	 * @param detalleImputacion detalle a incluir en las imputaciones que se creen
+	 * 
 	 * @return imputaciones que cancelan dichos saldos
 	 */
-	private List<Imputacion> crearImputacionesDeBalanceoDeResultados(List<Cuenta> cuentasBalanceadoras, Map<Long, BigDecimal> saldos) {
+	private List<Imputacion> crearImputacionesDeBalanceo(List<Cuenta> cuentasBalanceadoras, Map<Long, BigDecimal> saldos, String tipo, String detalleImputacion) {
 		List<Imputacion> result = new ArrayList<>();
 		
 		// Por cada saldo (uno por moneda)
 		for(Entry<Long, BigDecimal> entry : saldos.entrySet()) {
 			
 			// Se busca la cuenta balanceadora para dicha moneda (falla si no existe)
-			Cuenta balanceadora = cuentasBalanceadoras.stream().filter(c -> c.getMoneda().getId().equals(entry.getKey()))
-					.findFirst().orElseThrow(() -> new InvalidRequestException("No existe cuenta que balancee resultados para la moneda con id " + entry.getKey()));
+			Cuenta balanceadora = cuentasBalanceadoras.stream()
+					.filter(c -> c.getMoneda().getId().equals(entry.getKey()))
+					.findFirst()
+					.orElseThrow(() -> new InvalidRequestException("No existe cuenta que balancee " + tipo + " para la moneda con id " + entry.getKey()));
 					
 			BigDecimal saldo = entry.getValue();
 			
 			// Se crea la imputacion en dicha cuenta que lleva el saldo a 0
-			result.add(new Imputacion(balanceadora, saldo.negate(), "Refundición de cuentas de resultado"));
+			result.add(new Imputacion(balanceadora, saldo.negate(), detalleImputacion));
 		}
 		return result;
+	}
+	
+	/**
+	 * Genera las imputaciones para balancear los resultados de la Refundicion de Cuentas de Resultado.
+	 * @param cuentasBalanceadoras
+	 * @param saldos mapa cuya clave es el id de moneda y value es el saldo
+	 * @return imputaciones que cancelan dichos saldos
+	 */
+	private List<Imputacion> crearImputacionesDeBalanceoDeResultados(List<Cuenta> cuentasBalanceadoras, Map<Long, BigDecimal> saldos) {
+		return this.crearImputacionesDeBalanceo(cuentasBalanceadoras, saldos, "resultados", "Refundición de cuentas de resultado");
 	}
 	
 	/**

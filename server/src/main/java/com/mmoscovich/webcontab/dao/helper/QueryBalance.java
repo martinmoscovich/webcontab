@@ -3,7 +3,9 @@ package com.mmoscovich.webcontab.dao.helper;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,6 +20,7 @@ import org.springframework.data.domain.SliceImpl;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mmoscovich.webcontab.dto.informes.BalanceCuenta;
+import com.mmoscovich.webcontab.dto.informes.BalanceMensualCuenta;
 import com.mmoscovich.webcontab.model.Categoria;
 import com.mmoscovich.webcontab.model.Ejercicio;
 import com.mmoscovich.webcontab.util.JpaUtils;
@@ -34,6 +37,8 @@ public class QueryBalance {
 	private static enum TipoBusquedaCategorias {
 		SOLO_EN_ESAS, EXCEPTO_EN_ESAS
 	}
+	
+	private static final String SELECT = "SELECT c.id, c.codigo, c.descripcion, c.moneda_id, IFNULL(SUM(i.importe), 0) as balance";
 	
 	private static final String FROM = "FROM Cuenta c \n" +
 		    						   " LEFT JOIN imputacion i on c.id = i.cuenta_id \n" +
@@ -71,8 +76,13 @@ public class QueryBalance {
 		 */
 		private List<Categoria> categorias;
 		
+		
 		@Setter
 		private boolean incluirCero;
+		
+		/** Busca solo las cuentas ajustables por inflacion */
+		@Setter
+		private boolean soloAjustables;
 		
 		public FiltroBalance(Ejercicio ejercicio) {
 			this.ejercicio = ejercicio;
@@ -166,12 +176,37 @@ public class QueryBalance {
 	 */
 	@Transactional(readOnly = true)
 	public Stream<BalanceCuenta> stream(EntityManager em, int fetchSize) {
-		Query query = em.createNativeQuery(this.buildSQL());
+		return this.createStream(em, fetchSize, this.buildSQL(), this::mapRowToBalanceCuenta);
+	}
+	
+	/**
+	 * Ejecuta la query obteniendo un Stream con todos los resultados <b>POR MES</b> (sin paginar)
+	 * @param em EntityManager
+	 * @param fetchSize hint para la DB con el tamanio de fetch a utlilizar
+	 * @return
+	 */
+	@Transactional(readOnly = true)
+	public Stream<BalanceMensualCuenta> streamMensual(EntityManager em, int fetchSize) {
+		return this.createStream(em, fetchSize, this.buildSQLPorMes(), this::mapRowToBalanceMensualCuenta);
+	}
+	
+	/**
+	 * Ejecuta el SQL indicado usando el EntityMapper y devuelve un Stream donde cada row se mapea usando
+	 * el mapper especificado
+	 * @param <T> tipo de item que se genera por cada row
+	 * @param em entity manager
+	 * @param fetchSize hint para la DB con el tamanio de fetch a utlilizar
+	 * @param sql SQL a ejecutar
+	 * @param mapper funcion que convierte un row en el item deseado
+	 * @return
+	 */
+	private <T> Stream<T> createStream(EntityManager em, int fetchSize, String sql, Function<Object[], T> mapper) {
+		Query query = em.createNativeQuery(sql);
 		this.addParameters(query);
 		
 		Stream<Object[]> rows = JpaUtils.getStreamFromQuery(query, fetchSize);
 		
-		return rows.map(this::mapRowToBalanceCuenta);
+		return rows.map(mapper);
 	}
 	
 	/**
@@ -183,9 +218,28 @@ public class QueryBalance {
 		return new BalanceCuenta(((BigInteger)row[0]).longValue(), (String)row[1], (String)row[2], ((BigInteger)row[3]).longValue(), (BigDecimal)row[4]);
 	}
 	
+	/**
+	 * Mapea un row de resultados (Object[]) a {@link BalanceMensualCuenta}.
+	 * <p>La diferencia con {@link #mapRowToBalanceCuenta(Object[])}, es que incluye el mes del saldo.</p>
+	 * @param row
+	 * @return
+	 */
+	private BalanceMensualCuenta mapRowToBalanceMensualCuenta(Object[] row) {
+		return new BalanceMensualCuenta(
+				((BigInteger)row[0]).longValue(), 
+				(String)row[1], 
+				(String)row[2], 
+				((BigInteger)row[3]).longValue(), 
+				(BigDecimal)row[4],
+				YearMonth.parse(row[5].toString())
+		);
+	}
+	
 	/** Agrega los parametros a la query */
 	private void addParameters(Query query) {
+		query.setParameter("organizacionId", filtro.ejercicio.getOrganizacion().getId());
 		query.setParameter("ejercicioId", filtro.ejercicio.getId());
+		
 		if(filtro.desde != null) query.setParameter("desde", filtro.desde);
 		if(filtro.hasta != null) query.setParameter("hasta", filtro.hasta);
 	}
@@ -202,9 +256,8 @@ public class QueryBalance {
 	
 	/** Construye el SQL para obtener los items de balance */
 	String buildSQL() {
-		String select = "SELECT c.id, c.codigo, c.descripcion, c.moneda_id, IFNULL(SUM(i.importe), 0) as balance\n"; 
 		
-		return select + FROM + where() + GROUP_BY + having() + ORDER_BY + pagination(); 
+		return SELECT + "\n" + FROM + where() + GROUP_BY + having() + ORDER_BY + pagination(); 
 	}
 	
 	/** Construye el SQL para obtener el total de items de balance */
@@ -213,13 +266,26 @@ public class QueryBalance {
 		return "SELECT count(*) FROM (SELECT c.id\n" + FROM + where() + GROUP_BY_COUNT + having() + ")";  
 	}
 	
+	/** Construye el SQL para obtener los items mensuales de balance */
+	String buildSQLPorMes() {
+		// Se incluye el mes en el select y en el group by
+		String select = SELECT + ", YEAR(a.fecha) || '-' || LPAD(MONTH(a.fecha), 2, '0') as MES";
+		String groupBy = GROUP_BY.replace("\n", ", mes\n");
+		
+		return select + "\n" + FROM + where() + groupBy + having() + ORDER_BY + pagination(); 
+	}
+	
 	
 	/** Construye el WHERE */
 	private String where() {
 		return "WHERE " + 
 				new SQLCondition()
+				// Que sean cuentas de la organizacion deseada
+				.add(this.getOrganizacionFilter())
 				// Que sea Cuenta (imputable)
 				.add(this.getImputableFilter())
+				// Filtra por ajustables (si se pidio)
+				.add(this.getAjustableFilter())
 				// Filtra los asientos
 				.add(this.getAsientoFilter())
 				// Filtra las categorias
@@ -240,9 +306,22 @@ public class QueryBalance {
 		return "LIMIT :size OFFSET :offset";
 	}
 	
+	/** 
+	 * Filtro para solo traer las cuentas de una organizacion,
+	 * ya que el filtro por ejercicio solo aplica a cuentas con asientos 
+	 */
+	private String getOrganizacionFilter() {
+		return "c.organizacion_id = :organizacionId";
+	}
+	
 	/** Al ser query nativa, se debe indicar que sean solo cuentas (imputables) */
 	private String getImputableFilter() {
 		return "c.imputable = 1";
+	}
+
+	/** Si se pidio, filtra las cuentas por ajustables por inflacion */
+	private String getAjustableFilter() {
+		return filtro.soloAjustables ? "c.ajustable = 1" : "";
 	}
 	
 	/** 

@@ -19,6 +19,7 @@
       mostarAcciones
       class="pa-2"
       @renumerar="onRenumerar"
+      @inflacion="onInflacion"
       @cerrar="onCerrar"
       @reabrir="onReabrir"
       @eliminar="onEliminar"
@@ -107,6 +108,11 @@ export default class CardEjercicios extends Vue {
   /** Handler del boton de renumerar ejercicio */
   private onRenumerar(item: Ejercicio, fecha: Date) {
     this.$emit('renumerar', item, fecha);
+  }
+
+  /** Handler del boton de ajustar por inflacion el ejercicio */
+  private onInflacion(item: Ejercicio) {
+    this.$emit('inflacion', item);
   }
 
   /** Handler del boton de cerrar ejercicio */

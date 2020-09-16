@@ -26,8 +26,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 /**
- * Representa el indice de inflacion de un mes
- *
+ * Representa el indice de inflacion de un mes para una determinada moneda.
  */
 @Entity
 @NoArgsConstructor
@@ -53,7 +52,11 @@ public class InflacionMes extends PersistentEntity {
 	@JsonSerialize(using = OnlyIdSerializer.class)
 	private Moneda moneda;
     
-    /** Indice del mes */
+    /** 
+     * Indice del mes.
+     * <p>No puede ser null y debe ser positivo.
+     * <br> Puede tener hasta 4 decimales </p>
+      */
     @NotNull
     @Positive(groups = {Default.class, CreateValidation.class, UpdateValidation.class})
     @Column(precision = 11, scale = 4)
