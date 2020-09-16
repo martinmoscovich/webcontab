@@ -13,8 +13,8 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import com.mmoscovich.webcontab.exception.EjercicioFechaInvalidaException;
 import com.mmoscovich.webcontab.exception.EjercicioFinalizadoException;
+import com.mmoscovich.webcontab.exception.InvalidRequestException;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -25,7 +25,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-@AllArgsConstructor
 @NoArgsConstructor
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -60,8 +59,13 @@ public class Ejercicio extends PersistentEntity {
 	/** Id del asiento de refundicion */
 	private Long asientoRefundicionId;
 	
+	/** Id del asiento de ajuste por inflacion */
+	private Long asientoAjusteId;
+	
 	public Ejercicio(Organizacion organizacion, LocalDate inicio, LocalDate finalizacion) {
-		this(organizacion, inicio, finalizacion, null, false, null, null, null);
+		this.organizacion = organizacion;
+		this.inicio = inicio;
+		this.finalizacion = finalizacion;
 	}
 	
 	/** Indica si el ejercicio pertenece a la organizacion especificada */
@@ -72,6 +76,33 @@ public class Ejercicio extends PersistentEntity {
 	/** Valida que el ejercicio este activo */
 	public void validateActivo() throws EjercicioFinalizadoException {
 		if(this.isFinalizado()) throw new EjercicioFinalizadoException(this);
+	}
+	
+	/** 
+	 * Valida que el asiento se pueda borrar.
+	 * <p>No permite borrar asientos de otros ejercicios ni los especiales 
+	 * (apertura, cierre, refundicion y ajuste por inflacion).</p> 
+	 * @param asiento
+	 * @throws InvalidRequestException si no se permite el borrado
+	 */
+	public void validateAsientoBorrable(Asiento asiento) throws InvalidRequestException {
+		if(asiento.getId() == null) return;
+		
+		// No deberia pasar nunca
+		if(!asiento.perteneceA(this)) throw new InvalidRequestException("No se puede borrar un asiento de otro ejercicio");
+		
+		if(asiento.getId().equals(this.asientoAjusteId)) {
+			throw new InvalidRequestException("No se puede eliminar el asiento de ajuste por inflacion");
+		}
+		if(asiento.getId().equals(this.asientoAperturaId)) {
+			throw new InvalidRequestException("No se puede eliminar el asiento de apertura del ejercicio");
+		}
+		if(asiento.getId().equals(this.asientoRefundicionId)) {
+			throw new InvalidRequestException("No se puede eliminar el asiento de refundicion de resultado. Reabra el ejercicio");
+		}
+		if(asiento.getId().equals(this.asientoCierreId)) {
+			throw new InvalidRequestException("No se puede eliminar el asiento de cierre. Reabra el ejercicio");
+		}
 	}
 	
 	/** 

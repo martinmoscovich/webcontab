@@ -97,6 +97,14 @@ export class OrganizacionApi extends SimpleApi<Organizacion> {
       .then(toEntity(mapEjercicicioFromServer));
   }
 
+  /**
+   * Genera o regenera el asiento de ajuste por inflacion del ejercicio
+   * @param ejercicio ejercicio a ajustar
+   */
+  ajustarEjercicioPorInflacion(ejercicio: Ejercicio): Promise<Ejercicio> {
+    return this.http.put(`${EJERCICIOS_BASE_URL}/${ejercicio.id}/inflacion`).then(toEntity(mapEjercicicioFromServer));
+  }
+
   findMiembros(org: Organizacion): Promise<Member[]> {
     return this.http.get(`${BASE_URL}/${org.id}/miembros`).then(toList());
   }

@@ -26,6 +26,14 @@
         <div style="flex-grow: 1" />
         <b-button
           v-if="!item.finalizado && !readonly"
+          @click.stop="onInflacion(item)"
+          size="is-small"
+          type="is-warning"
+          class="mr-1"
+          >Inflación</b-button
+        >
+        <b-button
+          v-if="!item.finalizado && !readonly"
           @click.stop="onRenumerar(item)"
           size="is-small"
           type="is-info"
@@ -122,6 +130,23 @@ export default class EjerciciosList extends Vue {
 
   private onRenumerarClose() {
     this.ejercicioRenumerar = null;
+  }
+
+  private onInflacion(item: Ejercicio) {
+    // Si ya existe el asiento de ajuste, es un "reajuste"
+    const accion = item.asientoAjusteId ? 'Reajustar' : 'Ajustar';
+
+    // Se pide confirmacion
+    this.$buefy.dialog.confirm({
+      title: accion + ' por inflación',
+      icon: 'help',
+      hasIcon: true,
+      message: this.getConfirmMessage(item, accion.toLowerCase() + ' por inflación'),
+      cancelText: 'No',
+      confirmText: 'Ajustar',
+      // Si confirma, se emite el evento
+      onConfirm: () => this.$emit('inflacion', item)
+    });
   }
 
   /** Handler cuando se hace click en "Cerrar" */

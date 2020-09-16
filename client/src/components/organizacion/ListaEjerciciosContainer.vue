@@ -5,6 +5,7 @@
     :readonly="readonly"
     @save="onNewEjercicio"
     @renumerar="onRenumerar"
+    @inflacion="onInflacion"
     @cerrar="onCerrar"
     @reabrir="onReabrir"
     @eliminar="onEliminar"
@@ -78,6 +79,11 @@ export default class ListaEjerciciosContainer extends Vue {
   /** Handler cuando se desea renumerar un ejercicio */
   private onRenumerar(ejercicio: Ejercicio, fecha: Date) {
     organizacionStore.confirmarAsientosDelEjercicio({ ejercicio, fecha });
+  }
+
+  /** Handler cuando se desea ajustar por inflacion un ejercicio */
+  private onInflacion(ejercicio: Ejercicio) {
+    organizacionStore.ajustarPorInflacion(ejercicio);
   }
 
   /** Handler cuando se desea cerrar un ejercicio */

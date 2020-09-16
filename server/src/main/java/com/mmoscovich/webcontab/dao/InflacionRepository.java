@@ -19,6 +19,10 @@ public interface InflacionRepository extends JpaRepository<InflacionMes, Long> {
 	@Query("FROM InflacionMes WHERE moneda = :moneda AND mes BETWEEN :desde AND :hasta ORDER BY mes")
 	List<InflacionMes> findByMonedaAndPeriodo(Moneda moneda, LocalDate desde, LocalDate hasta);
 	
+	/** Busca los indices en un determinado periodo para todas las monedas */
+	@Query("FROM InflacionMes WHERE mes BETWEEN :desde AND :hasta ORDER BY mes")
+	List<InflacionMes> findByPeriodo(LocalDate desde, LocalDate hasta);
+	
 	/** 
 	 * Borra todos los indices de una determinada moneda.
 	 * <p>Util cuando una moneda deja de ser "ajustable".</p> 
