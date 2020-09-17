@@ -92,7 +92,8 @@ public abstract class CuentaBase extends PersistentEntity {
     private String descripcion;
     
     // TODO: Pasar a Cuenta
-    private Boolean activa;
+    @NotNull
+    private Boolean activa = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Categoria categoria;
