@@ -18,9 +18,10 @@ import com.mmoscovich.webcontab.model.Imputacion;
 public interface ImputacionRepository extends JpaRepository<Imputacion, Long> {
 	
 	/** 
-	 * Busca las imputaciones de todos los asientos especificados.
+	 * Busca las imputaciones de todos los asientos especificados. 
+	 * Las ordena por asiento primero y por orden despues.
 	 */
-	@Query("FROM Imputacion i join fetch i.cuenta WHERE i.asiento IN :asientos")
+	@Query("FROM Imputacion i join fetch i.cuenta WHERE i.asiento IN :asientos order by i.asiento, i.orden")
 	List<Imputacion> findByAsientos(Collection<Asiento> asientos);
 	
 	/** Elimina las imputaciones que tienen los ids especificados */
