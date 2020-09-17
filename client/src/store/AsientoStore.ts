@@ -6,7 +6,6 @@ import { byId } from '@/utils/array';
 import { asientoApi } from '@/api';
 import { notificationService, routerService } from '@/service';
 import { WebContabError, isNotFound } from '@/core/ajax/error';
-import { IdModel } from '@/model/IdModel';
 
 @Module
 export class AsientoStore extends VuexModule {

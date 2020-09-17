@@ -83,6 +83,15 @@ export default class AsientoView extends Vue {
 
   private mounted() {
     this.loadAsiento();
+
+    // Se inicia el ping
+    sessionStore.startPing();
+  }
+
+  /** Handler cuando se destruye el componente  */
+  private destroyed() {
+    // Se detiene el ping
+    sessionStore.stopPing();
   }
 
   /** Carga el asiento indicado segun la URL */
@@ -111,7 +120,10 @@ export default class AsientoView extends Vue {
         }
       } catch (error) {
         // Si no se encuentra el asiento, volver a la pagina de categorias
-        if (isNotFound(error)) this.$router.replace(routerService.categoria());
+        if (isNotFound(error)) {
+          this.$router.replace(routerService.categoria());
+          return;
+        }
       }
     } else {
       // Si es nuevo, se busca la ultima fecha de asiento para ofrecerla como predeterminado

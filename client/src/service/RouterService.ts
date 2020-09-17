@@ -8,6 +8,7 @@ import { SearchOptions } from '@/core/ajax/model';
 
 const HOME_ROUTE: Location = { name: 'Home' };
 const LOGIN_ROUTE: Location = { name: 'Login' };
+const VER_CUENTA_ROUTE: Location = { name: 'CuentaView' };
 const VER_ASIENTO_ROUTE: Location = { name: 'DetalleAsiento' };
 const NUEVO_ASIENTO_ROUTE: Location = { name: 'NuevoAsiento' };
 const LISTA_PROVINCIAS_ROUTE: Location = { name: 'ListaProvincias' };
@@ -70,12 +71,16 @@ export class RouterService {
   goToLogin(opts?: { redirect?: boolean }) {
     router.push(this.login(opts));
   }
-  goToCuenta(cuenta: IdModel, query?: Dictionary<string | (string | null)[]>) {
-    router.push({
-      name: 'CuentaView',
+
+  cuenta(cuenta: IdModel, query?: Dictionary<string | (string | null)[]>) {
+    return {
+      ...VER_CUENTA_ROUTE,
       params: { id: cuenta.id.toString() },
       query
-    });
+    };
+  }
+  goToCuenta(cuenta: IdModel, query?: Dictionary<string | (string | null)[]>) {
+    router.push(this.cuenta(cuenta, query));
   }
 
   categoria(categoria?: IdModel | null) {
@@ -143,16 +148,19 @@ export class RouterService {
     router.push(this.ejercicios());
   }
 
-  goToImputacion(imputacion: ImputacionDTO) {
-    router.push({
-      name: 'DetalleAsiento',
+  imputacion(imputacion: ImputacionDTO) {
+    return {
+      ...VER_ASIENTO_ROUTE,
       params: {
         id: imputacion.asiento.id.toString()
       },
       query: {
         imputacion: imputacion.id.toString()
       }
-    });
+    };
+  }
+  goToImputacion(imputacion: ImputacionDTO) {
+    router.push(this.imputacion(imputacion));
   }
 
   provincias() {
