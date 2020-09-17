@@ -4,11 +4,13 @@ import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.springframework.stereotype.Component;
 
@@ -59,6 +61,16 @@ public class SessionResource {
 		}
 		
 		return new SessionDTO(mapper.toDto(user), session.getOrganizacion().orElse(null), session.getEjercicio().orElse(null), session.getCurrentRoles());
+	}
+	
+	/**
+	 * Permite hacer ping para estirar la vida de la sesion.
+	 * <p>Se usa POST, ya que solo se puede acceder autenticado</p> 
+	 */
+	@POST
+	@Path("ping")
+	public Response ping() {
+		return Response.accepted().build();
 	}
 
 	/**

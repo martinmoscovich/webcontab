@@ -189,8 +189,8 @@ export default class TablaAsientos extends Vue {
   }
 
   /** Handler cuando se selecciona un asiento */
-  private onRowClick(row: object) {
-    routerService.goToAsiento(row);
+  private onRowClick(item: AsientoDTO) {
+    routerService.goToAsiento(item);
   }
 }
 </script>

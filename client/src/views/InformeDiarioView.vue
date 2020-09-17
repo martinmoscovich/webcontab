@@ -38,16 +38,14 @@
 import { Vue, Component, Watch } from 'vue-property-decorator';
 import TablaAsientos from '@/components/asientos/TablaAsientos.vue';
 import FiltroAsientos from '@/components/asientos/FiltroAsientos.vue';
-import { asientoApi, informeApi } from '../api';
+import { asientoApi, informeApi } from '@/api';
 import { AsientoDTO } from '@/model/AsientoDTO';
 import Page, { emptyPage } from '@/core/Page';
-import { parseServerDate } from '../utils/date';
-import { AsientosSearchFilter, AsientosSearchOptions } from '../api/AsientoApi';
-import { sessionStore } from '../store';
-import { routerService } from '../service';
-import { ImputacionDTO } from '../model/ImputacionDTO';
-import { Cuenta } from '../model/Cuenta';
-import { toInt } from '../utils/general';
+import { parseServerDate } from '@/utils/date';
+import { AsientosSearchFilter, AsientosSearchOptions } from '@/api/AsientoApi';
+import { sessionStore } from '@/store';
+import { routerService } from '@/service';
+import { toInt } from '@/utils/general';
 import { toQuerystringDictionary } from '@/core/ajax/helpers';
 
 /**
