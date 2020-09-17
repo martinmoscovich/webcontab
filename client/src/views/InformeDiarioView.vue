@@ -29,15 +29,7 @@
 
     <!-- Tabla de Asientos -->
     <div class="card">
-      <TablaAsientos
-        :page="asientos"
-        :loading="loading"
-        :pageSize="PAGE_SIZE"
-        @asientoSelected="onAsientoSelected"
-        @imputacionSelected="onImputacionSelected"
-        @cuentaSelected="onCuentaSelected"
-        @request="onPageRequest"
-      />
+      <TablaAsientos :page="asientos" :loading="loading" :pageSize="PAGE_SIZE" @request="onPageRequest" />
     </div>
   </section>
 </template>
@@ -131,21 +123,6 @@ export default class InformeDiarioView extends Vue {
     } finally {
       this.loading = false;
     }
-  }
-
-  /** Handler cuando se selecciona un asiento */
-  private onAsientoSelected(asiento: AsientoDTO) {
-    routerService.goToAsiento(asiento);
-  }
-
-  /** Handler cuando se selecciona una cuenta */
-  private onCuentaSelected(cuenta: Cuenta) {
-    routerService.goToCuenta(cuenta);
-  }
-
-  /** Handler cuando se selecciona una imputacion */
-  private onImputacionSelected(imputacion: ImputacionDTO) {
-    routerService.goToImputacion(imputacion);
   }
 }
 </script>
