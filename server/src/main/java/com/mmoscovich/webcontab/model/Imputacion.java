@@ -5,9 +5,9 @@ import java.math.BigDecimal;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.Index;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
@@ -30,8 +30,8 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-// El orden es unique por asiento
-@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"asiento_id", "orden"})})
+// Se crea un indice para orden
+@Table(indexes = {@Index(columnList = "asiento_id, orden")})
 public class Imputacion extends PersistentEntity {
 	
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
