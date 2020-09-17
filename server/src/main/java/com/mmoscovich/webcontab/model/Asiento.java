@@ -15,6 +15,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
@@ -64,6 +65,7 @@ public class Asiento extends PersistentEntity {
 
 	@NotEmpty
 	@Valid
+	@OrderBy("orden")
 	@OneToMany(mappedBy = "asiento", fetch = FetchType.LAZY, cascade = {CascadeType.DETACH, CascadeType.REFRESH})
 	private List<Imputacion> imputaciones = new ArrayList<>();
 
