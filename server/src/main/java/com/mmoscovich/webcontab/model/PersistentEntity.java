@@ -1,6 +1,7 @@
 package com.mmoscovich.webcontab.model;
 
 
+import java.util.Comparator;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -72,5 +73,25 @@ public abstract class PersistentEntity {
         else 
         	return this.id;
     }
+	
+	/**
+	 * Compara por {@link PersistentEntity} por id.
+	 * <p>Si algunos de los ids es null, ese elemento se coloca primero.</p>
+	 *
+	 */
+	public static class IdComparator<T extends PersistentEntity> implements Comparator<T> {
 
+		@Override
+		public int compare(T o1, T o2) {
+			if(o1.getId() == null) {
+				if(o2.getId() == null) return 0;
+
+				return -1;
+			}
+			
+			if(o2.getId() == null) return 1;
+			
+			return o1.getId().compareTo(o2.getId());
+		}
+	}
 }
