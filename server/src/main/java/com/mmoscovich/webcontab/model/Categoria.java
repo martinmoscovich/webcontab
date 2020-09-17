@@ -3,6 +3,7 @@ package com.mmoscovich.webcontab.model;
 import javax.persistence.Cacheable;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mmoscovich.webcontab.services.AsientoService;
@@ -28,6 +29,7 @@ public class Categoria extends CuentaBase {
 	 * Indica que es una categoria con cuentas de resultado.
 	 * <br>Se usa para el asiento de Refundicion de cuentas de resultados ({@link AsientoService#crearRefundicion(Ejercicio, Short)}).
 	 */
+	@NotNull
 	private Boolean resultado = false;
 
     public Categoria(Organizacion org, Short numero, String descripcion, boolean resultado) {
