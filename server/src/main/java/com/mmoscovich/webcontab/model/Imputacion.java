@@ -6,8 +6,11 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.Length;
@@ -27,11 +30,17 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+// El orden es unique por asiento
+@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"asiento_id", "orden"})})
 public class Imputacion extends PersistentEntity {
 	
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JsonSerialize(using = OnlyIdSerializer.class)
 	private Asiento asiento;
+	
+	/** Orden dentro del asiento (empieza en 1) */
+	@Positive
+	private Short orden;
 	
     @NotNull
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -78,6 +87,16 @@ public class Imputacion extends PersistentEntity {
      */
     public boolean perteneceA(Asiento asiento) {
     	return this.asiento.getId().equals(asiento.getId());
+    }
+    
+    /** Indica si la imputacion es parte del DEBE */
+    public boolean esDebe() {
+    	return this.importe != null && this.importe.signum() >= 0;
+    }
+    
+    /** Indica si la imputacion es parte del HABER */
+    public boolean esHaber() {
+    	return this.importe != null && this.importe.signum() < 0;
     }
     
     @Override
