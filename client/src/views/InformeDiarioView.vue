@@ -29,15 +29,7 @@
 
     <!-- Tabla de Asientos -->
     <div class="card">
-      <TablaAsientos
-        :page="asientos"
-        :loading="loading"
-        :pageSize="PAGE_SIZE"
-        @asientoSelected="onAsientoSelected"
-        @imputacionSelected="onImputacionSelected"
-        @cuentaSelected="onCuentaSelected"
-        @request="onPageRequest"
-      />
+      <TablaAsientos :page="asientos" :loading="loading" :pageSize="PAGE_SIZE" @request="onPageRequest" />
     </div>
   </section>
 </template>
@@ -46,16 +38,14 @@
 import { Vue, Component, Watch } from 'vue-property-decorator';
 import TablaAsientos from '@/components/asientos/TablaAsientos.vue';
 import FiltroAsientos from '@/components/asientos/FiltroAsientos.vue';
-import { asientoApi, informeApi } from '../api';
+import { asientoApi, informeApi } from '@/api';
 import { AsientoDTO } from '@/model/AsientoDTO';
 import Page, { emptyPage } from '@/core/Page';
-import { parseServerDate } from '../utils/date';
-import { AsientosSearchFilter, AsientosSearchOptions } from '../api/AsientoApi';
-import { sessionStore } from '../store';
-import { routerService } from '../service';
-import { ImputacionDTO } from '../model/ImputacionDTO';
-import { Cuenta } from '../model/Cuenta';
-import { toInt } from '../utils/general';
+import { parseServerDate } from '@/utils/date';
+import { AsientosSearchFilter, AsientosSearchOptions } from '@/api/AsientoApi';
+import { sessionStore } from '@/store';
+import { routerService } from '@/service';
+import { toInt } from '@/utils/general';
 import { toQuerystringDictionary } from '@/core/ajax/helpers';
 
 /**
@@ -131,21 +121,6 @@ export default class InformeDiarioView extends Vue {
     } finally {
       this.loading = false;
     }
-  }
-
-  /** Handler cuando se selecciona un asiento */
-  private onAsientoSelected(asiento: AsientoDTO) {
-    routerService.goToAsiento(asiento);
-  }
-
-  /** Handler cuando se selecciona una cuenta */
-  private onCuentaSelected(cuenta: Cuenta) {
-    routerService.goToCuenta(cuenta);
-  }
-
-  /** Handler cuando se selecciona una imputacion */
-  private onImputacionSelected(imputacion: ImputacionDTO) {
-    routerService.goToImputacion(imputacion);
   }
 }
 </script>

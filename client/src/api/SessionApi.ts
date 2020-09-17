@@ -1,4 +1,5 @@
 import { toEntity } from '@/core/ajax/helpers';
+import { RemoteError } from '@/core/ajax/error';
 import { AxiosInstance } from 'axios';
 import { Ejercicio } from '@/model/Ejercicio';
 import { Session, mapSessionFromServer } from '@/model/Session';
@@ -23,6 +24,16 @@ export class SessionApi {
   /** Hace logout del usuario */
   logout(): Promise<void> {
     return this.http.post('/logout');
+  }
+
+  /**
+   * Permite hacer ping para estirar la vida de la sesion.
+   */
+  async ping(): Promise<void> {
+    const response = await this.http.post(BASE_URL + '/ping');
+    // Debe devolver 202 o lanzar excepcion
+    // Si no lo hace, se lanza una desde aqui
+    if (response.status !== 202) throw new RemoteError(response.status, 'server_error', 'Error en el servidor');
   }
 
   /** Asocia la sesion a una organizacion */

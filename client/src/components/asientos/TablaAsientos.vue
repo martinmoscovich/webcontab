@@ -16,6 +16,7 @@
     :total="page.total"
     backend-pagination
     :per-page="pageSize"
+    @click="onRowClick"
     @page-change="onPageChange"
   >
     <template slot-scope="props">
@@ -24,12 +25,14 @@
           <b-checkbox v-model="areExpanded">{{ column.label }}</b-checkbox>
         </template>
         <small>
-          <a href="#" @click.prevent="onAsientoClick(props.row)">{{ props.row.numero }}</a>
+          <router-link :to="getAsientoRoute(props.row)">{{ props.row.numero }}</router-link>
         </small>
       </b-table-column>
 
       <b-table-column field="fecha" label="Fecha" centered>
-        <small class="has-text-grey is-abbr-like">{{ formatDate(props.row.fecha) }}</small>
+        <small class="has-text-grey is-abbr-like">
+          <router-link :to="getAsientoRoute(props.row)"> {{ formatDate(props.row.fecha) }}</router-link>
+        </small>
       </b-table-column>
 
       <b-table-column field="cuentaCodigo" label="Cuenta"> </b-table-column>
@@ -46,27 +49,29 @@
     </template>
 
     <template slot="detail" slot-scope="props">
-      <tr v-for="item in props.row.imputaciones" :key="item.id">
+      <router-link
+        tag="tr"
+        class="hand"
+        v-for="item in props.row.imputaciones"
+        :key="item.id"
+        :to="getImputacionRoute(item)"
+      >
         <td></td>
         <td></td>
         <td></td>
         <td>
           <small>
-            <a @click="onCuentaClick(item.cuenta)">
-              {{ item.cuenta.codigo }}
-            </a>
+            <router-link :to="getCuentaRoute(item.cuenta)">{{ item.cuenta.codigo }}</router-link>
           </small>
         </td>
         <td>
           <small>
-            <a @click="onCuentaClick(item.cuenta)">
-              {{ item.cuenta.descripcion }}
-            </a>
+            <router-link :to="getCuentaRoute(item.cuenta)">{{ item.cuenta.descripcion }}</router-link>
           </small>
         </td>
         <td>
           <small>
-            <a @click="onImputacionClick(item)">{{ item.detalle }}</a>
+            <router-link :to="getImputacionRoute(item)">{{ item.detalle }}</router-link>
           </small>
         </td>
         <td class="has-text-right">
@@ -81,7 +86,7 @@
             !(item.importe >= 0) ? formatCurrency(item.importe * -1, item.cuenta.moneda) : ''
           }}</small>
         </td>
-      </tr>
+      </router-link>
     </template>
 
     <template slot="empty">
@@ -101,11 +106,12 @@ import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 import { AsientoDTO } from '@/model/AsientoDTO';
 import Page from '@/core/Page';
 import { formatDate } from '@/utils/date';
-import { formatCurrency } from '../../utils/currency';
-import { Cuenta } from '../../model/Cuenta';
-import { ImputacionDTO } from '../../model/ImputacionDTO';
+import { formatCurrency } from '@/utils/currency';
+import { Cuenta } from '@/model/Cuenta';
+import { ImputacionDTO } from '@/model/ImputacionDTO';
 import { monedaStore } from '@/store';
 import { IdModel } from '@/model/IdModel';
+import { routerService } from '@/service';
 
 /**
  * Tabla de asientos con sus imputaciones.
@@ -156,6 +162,21 @@ export default class TablaAsientos extends Vue {
     return formatCurrency(importe, monedaStore.find(moneda.id)?.simbolo);
   }
 
+  /** Devuelve el link a la pagina para ver el asiento indicado */
+  private getAsientoRoute(item: AsientoDTO) {
+    return routerService.asiento(item);
+  }
+
+  /** Devuelve el link a la pagina para ver la cuenta indicada */
+  private getCuentaRoute(cuenta: Cuenta) {
+    return routerService.cuenta(cuenta);
+  }
+
+  /** Devuelve el link a la pagina para ver la imputacion indicada */
+  private getImputacionRoute(imputacion: ImputacionDTO) {
+    return routerService.imputacion(imputacion);
+  }
+
   /** Handler cuando cambia la Prop de ExpandAll */
   @Watch('expandAll')
   private onExpandChange() {
@@ -168,18 +189,8 @@ export default class TablaAsientos extends Vue {
   }
 
   /** Handler cuando se selecciona un asiento */
-  private onAsientoClick(item: AsientoDTO) {
-    this.$emit('asientoSelected', item);
-  }
-
-  /** Handler cuando se selecciona una cuenta */
-  private onCuentaClick(cuenta: Cuenta) {
-    this.$emit('cuentaSelected', cuenta);
-  }
-
-  /** Handler cuando se selecciona una imputacion */
-  private onImputacionClick(imputacion: ImputacionDTO) {
-    this.$emit('imputacionSelected', imputacion);
+  private onRowClick(item: AsientoDTO) {
+    routerService.goToAsiento(item);
   }
 }
 </script>

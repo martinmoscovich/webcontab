@@ -12,6 +12,21 @@ import { isDefined } from '@/utils/general';
 import { Rol } from '@/model/admin/Member';
 import { resetStore } from '@/store';
 import { isEqualOrAfter } from '@/utils/date';
+import { Timer } from '@/core/Timer';
+
+/** Intervalo de Ping en ms */
+const PING_INTERVAL = 60_000;
+
+/** Handler que hace ping al server para mantener la sesion */
+async function ping() {
+  try {
+    await sessionApi.ping();
+  } catch (e) {
+    logError('al hacer ping', e);
+    notificationService.error('Error al contactar al servidor para mantener la sesion');
+    throw e;
+  }
+}
 
 /**
  * Estado de sesion.
@@ -42,6 +57,14 @@ export class SessionStore extends VuexModule {
     error: false,
     loading: false
   };
+
+  /** Time para hacer ping */
+  private pingTimer: Timer = new Timer({
+    name: 'ping',
+    interval: PING_INTERVAL,
+    type: 'delay',
+    onTime: ping
+  });
 
   /** Vuelve el store a su estado inicial */
   @Mutation
@@ -201,6 +224,18 @@ export class SessionStore extends VuexModule {
       this.setStatus({ error: true });
       throw e;
     }
+  }
+
+  /** Inicia el ping periodico al server, para mantener viva la sesion */
+  @Action
+  startPing() {
+    this.pingTimer.start();
+  }
+
+  /** Detiene el ping periodico al server */
+  @Action
+  stopPing() {
+    this.pingTimer.stop();
   }
 
   /**
