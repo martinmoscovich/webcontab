@@ -17,7 +17,7 @@
 
 	<properties>
 		<java.version>14</java.version>
-		<server.version>14</server.version>
+		<server.version>15</server.version>
 		<org.mapstruct.version>1.3.1.Final</org.mapstruct.version>
 		<m2e.apt.activation>jdt_apt</m2e.apt.activation>
 		<version.access>5.0.0</version.access>
