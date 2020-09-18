@@ -18,7 +18,7 @@
       <span class="panel-icon">
         <b-icon :icon="getIcon(item)" custom-size="mdi-24px" size="is-small" />
       </span>
-      {{ item.descripcion }}
+      {{ item.descripcion }} <small class="has-text-grey-light is-size-7 ml-1"> [{{ item.codigo }}]</small>
       <div style="flex-grow: 1" />
 
       <!-- Boton de Quitar -->

@@ -1,10 +1,12 @@
 <template>
   <nav class="breadcrumb" aria-label="breadcrumbs">
     <ul>
-      <!-- Raiz (icono casita) -->
-      <li>
-        <a v-if="!cuenta.path || cuenta.path.length > 0" @click="onItemClick(null)"><b-icon icon="home"/></a>
-        <b-icon v-else icon="home" />
+      <!-- 
+        Raiz (icono casita)
+        Si estamos en el primer nivel no se muestra 
+      -->
+      <li :class="{ 'is-invisible': isRoot }">
+        <a @click="onItemClick(null)"><b-icon icon="home"/></a>
       </li>
 
       <!-- Nombres de las categorias del path -->
@@ -19,6 +21,9 @@
         <span style="margin-left: 12px" />
         <span v-if="readonly">{{ cuenta.descripcion }}</span>
         <EditableLabel v-else :value="cuenta.descripcion" @input="onNameChange" />
+
+        <!-- Si es una cuenta imputable se agrega el codigo al final -->
+        <small v-if="cuenta.imputable" class="has-text-grey-light is-size-6 ml-2"> [{{ cuenta.codigo }}]</small>
       </li>
     </ul>
   </nav>
