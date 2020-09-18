@@ -1,6 +1,7 @@
-import { queryString, toEntity, toList } from '@/core/ajax/helpers';
+import { queryString, toEntity, toList, toPage } from '@/core/ajax/helpers';
 import { Cuenta, CuentaOCategoria, mapCuenta, mapCuentaOCategoria } from '@/model/Cuenta';
 import { AxiosInstance } from 'axios';
+import Page from '@/core/Page';
 
 const BASE_URL = '/cuentas';
 
@@ -58,8 +59,8 @@ export class CuentaApi {
    * Se usa en el autocomplete
    * @param query
    */
-  search(query: string): Promise<Cuenta[]> {
-    return this.http.get(`${BASE_URL}${queryString({ query })}`).then(toList(mapCuenta));
+  search(query: string, page?: number): Promise<Page<Cuenta>> {
+    return this.http.get(`${BASE_URL}${queryString({ query, page })}`).then(toPage(mapCuenta));
   }
 
   /**
@@ -67,8 +68,10 @@ export class CuentaApi {
    * Se usa en el autocomplete
    * @param query
    */
-  searchWithCategories(query: string): Promise<CuentaOCategoria[]> {
-    return this.http.get(`${BASE_URL}${queryString({ query, categories: true })}`).then(toList(mapCuentaOCategoria));
+  searchWithCategories(query: string, page?: number): Promise<Page<CuentaOCategoria>> {
+    return this.http
+      .get(`${BASE_URL}${queryString({ query, categories: true, page })}`)
+      .then(toPage(mapCuentaOCategoria));
   }
 
   /**
