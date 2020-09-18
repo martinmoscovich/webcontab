@@ -5,6 +5,7 @@
         <b-icon :icon="getIcon(item)" custom-size="mdi-24px" size="is-small" />
       </span>
       {{ item.numero }}. {{ item.descripcion }}
+      <small v-if="item.categoriaId" class="has-text-grey-light is-size-7 ml-1"> [{{ item.codigo }}]</small>
     </a>
   </nav>
 </template>
