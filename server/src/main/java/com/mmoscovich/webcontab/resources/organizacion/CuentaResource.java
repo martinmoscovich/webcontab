@@ -20,11 +20,14 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.mmoscovich.webcontab.dto.CuentaDTO;
+import com.mmoscovich.webcontab.dto.PageDTO;
+import com.mmoscovich.webcontab.dto.PageReq;
 import com.mmoscovich.webcontab.dto.mapper.CuentaMapper;
 import com.mmoscovich.webcontab.exception.ConflictException;
 import com.mmoscovich.webcontab.exception.EntityNotFoundException;
@@ -56,18 +59,27 @@ public class CuentaResource {
 	private CuentaMapper mapper;
 	
 	/**
-	 * Devuelve una lista de cuentas o de cuentas y categorias. 
-	 * <p>La busqueda puede ser por ids o por texto en el codigo, descripcion u alias.</p>
+	 * Provee dos funcionalidades (segun los query param):
+	 * <ul>
+	 * <li>Busca por un texto en el codigo, descripcion o alias (para autocomplete) y devuelve una pagina de cuentas o de cuentas y categorias.</li>
+	 * <li>Busca cuentas por id y devuelve la lista (sin paginar).</li> 
+	 * </ul>
 	 * @param params
-	 * @return
-	 * @throws InvalidRequestException
+	 * @return page o list, segun el tipo de busqueda
+	 * @throws InvalidRequestException si no se enviaron los parametros requeridos
 	 */
     @GET
-    public List<CuentaDTO> list(@BeanParam CuentaQuery params) throws InvalidRequestException {
+    public Response list(@BeanParam CuentaQuery params, @Valid @BeanParam PageReq pageParams) throws InvalidRequestException {
     	Organizacion org = session.getOrganizacionOrThrow();
 		
-        if(params.isSearchQuery()) return mapper.toDtoWithPath(service.search(org, params.getSearchText(), params.isIncludeCategories()));
-        if(params.isFindByIds()) return mapper.toDto(service.findByIds(org, params.getIds()));
+        if(params.isSearchQuery()) {
+        	PageDTO<CuentaDTO> result = mapper.toDtoWithPath(service.search(org, params.getSearchText(), params.isIncludeCategories(), pageParams.toPageable()));
+        	return Response.ok(result).build();
+        }
+        if(params.isFindByIds()) {
+        	List<CuentaDTO> result = mapper.toDto(service.findByIds(org, params.getIds()));
+        	return Response.ok(result).build();
+        }
         
         throw new InvalidRequestException("Debe usar el parametro query o el parametro ids");
     }

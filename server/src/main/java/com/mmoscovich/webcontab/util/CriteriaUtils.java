@@ -78,10 +78,18 @@ public class CriteriaUtils {
 		// Se obtiene una pagina de items
 		List<T> content = em.createQuery(criteria)
 			.setFirstResult(Long.valueOf(pagination.getOffset()).intValue())
-			.setMaxResults(pagination.getPageSize())
+			
+			// Se pide uno mas que lo necesario para saber si hay next
+			.setMaxResults(pagination.getPageSize() + 1)
 			.getResultList();
 		
-		return new SliceImpl<T>(content);
+		int resultSize = content.size();
+
+		// Se obtiene la lista con el tamanio de pagina como maximo
+		content = content.subList(0, Math.min(pagination.getPageSize(), resultSize));
+		
+		return new SliceImpl<T>(content, pagination, content.size() < resultSize);
+		
 	}
 	
 	/**
@@ -93,7 +101,11 @@ public class CriteriaUtils {
 	 * @return
 	 */
 	public static <T> Page<T> getPage(EntityManager em, final CriteriaQuery<T> criteria, Pageable pagination) {
-		List<T> content = getSlice(em, criteria, pagination).getContent();
+		// Se obtiene una pagina de items
+		List<T> content = em.createQuery(criteria)
+			.setFirstResult(Long.valueOf(pagination.getOffset()).intValue())
+			.setMaxResults(pagination.getPageSize())
+			.getResultList();
 		
 		// Se obtiene la pagina con el total
         return new PageImpl<T>(content, pagination, count(em, criteria));
@@ -122,6 +134,32 @@ public class CriteriaUtils {
 		CriteriaBuilder builder = em.getCriteriaBuilder();
 	    CriteriaQuery<Long> query = createCountQuery(builder, criteria);
 	    return em.createQuery(query).getSingleResult();
+	}
+	
+	/**
+	 * Concatena una cantidad arbitraria de campos usando el delimitador indicado
+	 * @param delimiter delimitador entre campos
+	 * @param expressions expresiones a concatenar
+	 * @return la expresion que concatena los campos usando el delimitador
+	 */
+	@SafeVarargs
+	public static Expression<String> concat(final CriteriaBuilder cb, String delimiter, Expression<String> ... expressions) {
+	    if(expressions.length == 1) return expressions[0];
+	    
+	    Expression<String> result = null;
+	    
+	    for (int i = 0; i < expressions.length; i++) {
+	        final Expression<String> expression = expressions[i];
+	        
+	        // Si es la primera expresion se incluye. Si no, se concatena a lo acumulado
+	        result = (result == null) ? expression : cb.concat(result, expression);
+
+	        // Si no es la ultima expresion se agrega el delimitador
+            if (i < expressions.length - 1) {
+                result = cb.concat(result, delimiter);
+	        }
+	    }
+	    return result;
 	}
 
 	/**
