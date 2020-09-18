@@ -4,6 +4,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,14 +79,14 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
      * @param includeCategories si debe incluir categorias o solo cuentas
      * @return
      */
-	public List<? extends CuentaBase> search(Organizacion org, String query, boolean includeCategories) {
+	public Slice<? extends CuentaBase> search(Organizacion org, String query, boolean includeCategories, Pageable pageParams) {
 		log.debug("Buscando Cuentas{} con query {}", includeCategories ? " y Categorias" : "", query);
     	
 		// Se busca categorias con esa descripcion o codigo primero
 		List<Categoria> categorias = catService.search(org, query);
 		
 		// Se busca cuentas o categorias que tienen esa descripcion, codigo o que son hijas de las categorias encontradas
-		return includeCategories ? baseDao.searchAllByText(org, query.toLowerCase(), categorias) : baseDao.searchCuentasByText(org, query.toLowerCase(), categorias);
+		return includeCategories ? baseDao.searchAllByText(org, query.toLowerCase(), categorias, pageParams) : baseDao.searchCuentasByText(org, query.toLowerCase(), categorias, pageParams);
 	}
 	
 	/** 

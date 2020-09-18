@@ -3,6 +3,9 @@ package com.mmoscovich.webcontab.dao;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+
 import com.mmoscovich.webcontab.model.Categoria;
 import com.mmoscovich.webcontab.model.Cuenta;
 import com.mmoscovich.webcontab.model.CuentaBase;
@@ -24,7 +27,7 @@ public interface CuentaBaseExtraRepository {
 	Optional<Long> findDuplicado(CuentaBase catOCuenta, String newDescripcion, boolean checkCodigo);
 	
 	/**
-	 * Busca cuentas dentro de la organizacion que cumplan <b>al menos una</b> de las siguientes condiciones:<br>
+	 * Busca una pagina de cuentas dentro de la organizacion que cumplan <b>al menos una</b> de las siguientes condiciones:<br>
 	 * <ul>
 	 * <li>Incluyan el texto en la descripcion</li> 
 	 * <li>Incluyan el texto en el alias</li>
@@ -32,10 +35,10 @@ public interface CuentaBaseExtraRepository {
 	 * <li>Son descendientes de las categorias indicadas.</li>
 	 * </ul>   
 	 */
-	List<Cuenta> searchCuentasByText(Organizacion org, String query, List<Categoria> categorias);
+	Slice<Cuenta> searchCuentasByText(Organizacion org, String query, List<Categoria> categorias, Pageable pageParams);
 	
 	/**
-	 * Busca categorias o cuentas dentro de la organizacion que cumplan <b>al menos una</b> de las siguientes condiciones:<br>
+	 * Busca una pagina de categorias o cuentas dentro de la organizacion que cumplan <b>al menos una</b> de las siguientes condiciones:<br>
 	 * <ul>
 	 * <li>Incluyan el texto en la descripcion</li> 
 	 * <li>Incluyan el texto en el alias</li>
@@ -43,7 +46,7 @@ public interface CuentaBaseExtraRepository {
 	 * <li>Son descendientes de las categorias indicadas.</li>
 	 * </ul>   
 	 */
-	List<CuentaBase> searchAllByText(Organizacion org, String query, List<Categoria> categorias);
+	Slice<CuentaBase> searchAllByText(Organizacion org, String query, List<Categoria> categorias, Pageable pageParams);
 	
 	/** 
 	 * Obtiene todas las cuentas de la organizacion descendientes de las categorias especificadas.

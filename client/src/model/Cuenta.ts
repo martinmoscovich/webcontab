@@ -53,6 +53,9 @@ export interface Cuenta extends CuentaBase {
   /** Id de la moneda asociada */
   monedaId: number;
 
+  /** Alias (nombre alternativo para busqueda) */
+  alias?: string;
+
   /**
    * Indica si es una cuenta de un individuo
    * Se utiliza para filtrarlas, ya que pueden ser muchas
@@ -85,6 +88,7 @@ export function mapCuenta(json: any): Cuenta {
     moneda: { id: json.monedaId },
     individual: json.individual,
     ajustable: json.ajustable,
+    alias: json.alias,
     imputable: true
   };
 }

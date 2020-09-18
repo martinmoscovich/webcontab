@@ -1,8 +1,34 @@
 <template>
+  <!-- <div class="card">
+    <header class="card-header">
+      <p class="card-header-title">
+        <b-icon icon="file" custom-size="default" />
+        Cuentas
+      </p>
+      <CuentaSearch
+        modo="todos"
+        clearOnSelect
+        @input="onCuentaSelected"
+        :exclude="cuentasIds"
+        style="width: 70%; margin-top: 6px"
+        class="mr-2"
+      />
+    </header>
+    <div class="card-content">
+      <SeleccionCuentasList :cuentas="cuentas" class="pa-2" @eliminar="onQuitar" />
+    </div>
+  </div> -->
   <CardComponentWithActions title="Cuentas" icon="file" dense>
-    <template v-slot:actions>
+    <template v-slot:actions-left>
       <!-- Autocomplete de categorias y cuentas -->
-      <CuentaSearch modo="todos" clearOnSelect @input="onCuentaSelected" :exclude="cuentasIds" />
+      <CuentaSearch
+        modo="todos"
+        clearOnSelect
+        @input="onCuentaSelected"
+        :exclude="cuentasIds"
+        style="width: 85%;"
+        class="mr-2"
+      />
     </template>
     <!-- Lista de categorias y cuentas incluidas -->
     <SeleccionCuentasList :cuentas="cuentas" class="pa-2" @eliminar="onQuitar" />

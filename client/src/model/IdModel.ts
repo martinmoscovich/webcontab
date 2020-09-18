@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { isDefined } from '@/utils/general';
+import { mapProperty } from '@/utils/array';
 
 /** Modelo con id */
 export interface IdModel {
@@ -21,4 +22,14 @@ export function hasId(item: any): item is IdModel {
 }
 export function hasCodigo(item: any): item is CodigoModel {
   return isDefined(item.codigo);
+}
+
+/** Convierte una lista de items que tienen un atributo id en una lista de los ids (lista de numeros) */
+export function toIdList(list: IdModel[]) {
+  return mapProperty(list, 'id');
+}
+
+/** Convierte una lista de items que tienen un atributo "codigo"" en una lista de los codigos (lista de strings) */
+export function toCodigoList(list: CodigoModel[]) {
+  return mapProperty(list, 'codigo');
 }

@@ -10,10 +10,17 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaBuilder.Case;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 
 import com.mmoscovich.webcontab.dao.helper.CriteriaCondition;
 import com.mmoscovich.webcontab.model.Categoria;
@@ -22,6 +29,7 @@ import com.mmoscovich.webcontab.model.CuentaBase;
 import com.mmoscovich.webcontab.model.CuentaBase_;
 import com.mmoscovich.webcontab.model.Cuenta_;
 import com.mmoscovich.webcontab.model.Organizacion;
+import com.mmoscovich.webcontab.util.CriteriaUtils;
 
 /**
  * Implementacion de {@link CuentaBaseExtraRepository}. 
@@ -94,17 +102,17 @@ public class CuentaBaseExtraRepositoryImpl implements CuentaBaseExtraRepository 
 	}
 	
 	@Override
-	public List<Cuenta> searchCuentasByText(Organizacion org, String query, List<Categoria> categorias) {
+	public Slice<Cuenta> searchCuentasByText(Organizacion org, String query, List<Categoria> categorias, Pageable pageParams) {
 		// FROM Cuenta WHERE organizacion = :org AND (lower(descripcion) LIKE :%query% OR lower(descripcion) LIKE :%query% OR codigo LIKE :query% [OR codigo LIKE :parent1% OR codigo LIKE :parent2%...])
 		
-		return this.searchBaseByText(Cuenta.class, org, query, categorias);
+		return this.searchBaseByText(Cuenta.class, org, query, categorias, pageParams);
 	}
 	
 	@Override
-	public List<CuentaBase> searchAllByText(Organizacion org, String query, List<Categoria> categorias) {
+	public Slice<CuentaBase> searchAllByText(Organizacion org, String query, List<Categoria> categorias, Pageable pageParams) {
 		// FROM CuentaBase WHERE organizacion = :org AND (lower(descripcion) LIKE :%query% OR lower(alias) LIKE :%query% OR codigo LIKE :query% [OR codigo LIKE :parent1% OR codigo LIKE :parent2%...])
 		
-		return this.searchBaseByText(CuentaBase.class, org, query, categorias);
+		return this.searchBaseByText(CuentaBase.class, org, query, categorias, pageParams);
 	}
 	
 	/**
@@ -143,27 +151,107 @@ public class CuentaBaseExtraRepositoryImpl implements CuentaBaseExtraRepository 
 	/**
 	 * Hace la busqueda por texto.
 	 */
-	private <T extends CuentaBase> List<T> searchBaseByText(Class<T> cls, Organizacion org, String query, List<Categoria> categorias) {
+	private <T extends CuentaBase> Slice<T> searchBaseByText(Class<T> cls, Organizacion org, String text, List<Categoria> categorias, Pageable pageReq) {
 		CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<T> criteria = builder.createQuery(cls);
         Root<T> cuenta = criteria.from(cls);
         
-        Predicate searchFilter = new CriteriaCondition()
-        	.add(builder.like(builder.lower(cuenta.get(Cuenta_.DESCRIPCION)), "%" + query + "%"))
-        	.add(builder.like(builder.lower(cuenta.get(Cuenta_.ALIAS)), "%" + query + "%"))
-        	.add(builder.like(cuenta.get(Cuenta_.CODIGO), query + "%"))
-
-        	// Se transforman las categorias a predicates que piden las cuentas que pertenecen
-        	.add(pertenecientesACategorias(builder, cuenta, categorias))
-        	
-        	.buildOr(builder);
+        // Expresion que equivale a "descripcion || alias". 
+        //Se usa para buscar el texto en ambos campos al mismo tiempo
+        // Si el alias es null, se usa un string vacio
+        Expression<String> descripcionAlias = CriteriaUtils.concat(builder, "|", cuenta.get(Cuenta_.DESCRIPCION), builder.coalesce(cuenta.get(Cuenta_.ALIAS), ""));
+        Predicate descripcionAliasLike = builder.like(builder.lower(descripcionAlias), "%" + text + "%");
         
+		CriteriaCondition cond = new CriteriaCondition().add(descripcionAliasLike);
+//      .add(builder.like(builder.lower(cuenta.get(Cuenta_.DESCRIPCION)), "%" + text + "%"))
+//      .add(builder.like(builder.lower(cuenta.get(Cuenta_.ALIAS)), "%" + text + "%"));
+        
+		// Solo buscar en codigo si el texto puede ser un codigo (numeros y puntos)
+        if(StringUtils.isNumeric(text.replace(".", ""))) {
+        	cond.add(builder.like(cuenta.get(Cuenta_.CODIGO), text + "%"));
+        }
+
+    	// Se transforman las categorias a predicates que piden las cuentas que pertenecen
+        cond.add(pertenecientesACategorias(builder, cuenta, categorias));
+        	
         criteria.where(
-        		// Deben ser las cuentas de una organizacion
-        		builder.equal(cuenta.get(Cuenta_.ORGANIZACION), org),
-        		searchFilter
+    		// Deben ser las cuentas de una organizacion
+    		builder.equal(cuenta.get(Cuenta_.ORGANIZACION), org),
+    		cond.buildOr(builder)
         );
         
-        return em.createQuery(criteria).getResultList();
+        // Se ordenan los resultados
+        criteria.orderBy( 
+    		// Primero las que tienen el texto en la descripcion o alias
+        	// Luego las que son hijas, en el orden en que vinieron las categorias (que ya estaban ordenadas)
+    		builder.asc(this.getOrderPorCategorias(builder, cuenta, descripcionAliasLike, categorias)),
+    		
+    		// En caso de ser iguales, van primero las categorias (imputable = 0)
+    		builder.asc(cuenta.type()),
+    		
+    		// En caso de ser iguales, por longitud de texto donde se encontro
+    		// La logica es que si el texto se encuentra en un campo mas corto, la coincidencia es mayor
+    		builder.asc(this.getOrderPorLongitud(builder, cuenta, descripcionAliasLike)),
+    		
+    		// Finalmente, si todo lo demas es igual, se ordenan por numero de categoria/cuenta
+    		builder.asc(cuenta.get(Cuenta_.ORDEN))
+		);
+        
+        // Se limita la longitud
+        return CriteriaUtils.getSlice(em, criteria, pageReq);
+	}
+	
+	/**
+	 * Devuelve una expresion para ordenar las cuentas, colocando primero las que coinciden en texto o alias y
+	 * luego las que son hijas de las categorias que coinciden.
+	 * <p>
+	 * La query recibe una lista de categorias ordenada por prioridad para buscar sus subcuentas.
+	 * <br>Por lo tanto se debe ordenar de tal manera que las subcuentas queden en el orden en el que vinieron sus padres.
+	 * </p> 
+	 * @param builder
+	 * @param cuenta
+	 * @param categorias
+	 * @return
+	 */
+	private Expression<Object> getOrderPorCategorias(CriteriaBuilder builder, Root<?> cuenta, Predicate descripcionAliasLike, List<Categoria> categorias) {
+		final Case<Object> select= builder.selectCase();
+			
+		// El primer orden es que coincidan en descripcion o alias directamente	
+		select.when(descripcionAliasLike, 0);
+        
+	     // Se hace un filtrado para no incluir categorias hijas de otras que ya estan incluidas
+	     Collection<String> codigos = new ArrayList<>();
+		
+	     // Se recorre la lista de categorias ordenadas
+		 for(Categoria cat : categorias) {
+			if(!tienePrefijo(codigos, cat.getCodigo())) {
+				codigos.add(cat.getCodigo());
+				// Expresion que obtiene el prefijo del codigo
+				Expression<String> prefijo = builder.substring(cuenta.get(Cuenta_.CODIGO), 0, cat.getCodigo().length());
+				
+				// Cada cuenta tiene un valor equivalente a la posicion de su categoria padre en la lista
+				select.when(builder.equal(prefijo, cat.getCodigo()), codigos.size());
+			}
+		 }
+		 
+		 // Cualquier otra debe tener un valor mayor para ir al final
+		 return select.otherwise(codigos.size() + 1);
+	}
+	
+	/**
+	 * Devuelve una expresion para ordenar las cuentas en base a la longitud del texto donde matchea.
+	 * <p>
+	 * Si matchea por descripcion o alias se usa la longitud de la descripcion (TODO Que hacer con el alias?).
+	 * <br>Si matchea por hijo, se ordena por la longitud del codigo (mientras menos niveles, mejor).
+	 * </p> 
+	 * @param builder
+	 * @param cuenta
+	 * @param categorias
+	 * @return
+	 */
+	private Expression<Object> getOrderPorLongitud(CriteriaBuilder builder, Root<?> cuenta, Predicate descripcionAliasLike) {
+		return builder.selectCase()
+				.when(descripcionAliasLike, builder.length(cuenta.get(Cuenta_.DESCRIPCION)))
+				.otherwise(builder.length(cuenta.get(Cuenta_.ORDEN)));
 	}
 }
