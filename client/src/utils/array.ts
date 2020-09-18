@@ -170,7 +170,7 @@ export function max<T, K extends keyof T>(items: T[], field: K): T[K] | null {
  * Dado un array, retorna otro sin valores repetidos.
  * @param array
  */
-export function distinct<T>(array: T[]) {
+export function distinct<T>(array: T[]): T[] {
   return array.filter((v, i, a) => a.indexOf(v) === i);
 }
 
@@ -180,4 +180,13 @@ export function distinct<T>(array: T[]) {
  */
 export function getDefinedItems<T>(array: T[]): T[] {
   return array.filter(isDefined);
+}
+
+/**
+ * Convierte una lista de items a una lista de una determina propiedad del item
+ * @param array lista
+ * @param name nombre de la propiedad a mapear
+ */
+export function mapProperty<T, K extends keyof T>(array: T[], name: K): Array<T[K]> {
+  return array.map(item => item[name]);
 }

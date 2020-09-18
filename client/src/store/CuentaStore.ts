@@ -13,6 +13,8 @@ import { notificationService } from '@/service';
 import { byId, buildCompareFn } from '@/utils/array';
 import { logError } from '@/utils/log';
 import { Action, Module, Mutation, VuexModule } from 'vuex-class-modules';
+import Page, { emptyPage } from '@/core/Page';
+import { toIdList } from '@/model/IdModel';
 
 interface CuentaQuery {
   text: string;
@@ -21,7 +23,7 @@ interface CuentaQuery {
 
 interface SearchResult<T extends number | CuentaOCategoria> {
   query: CuentaQuery;
-  results: T[];
+  page: Page<T>;
 }
 
 /**
@@ -33,19 +35,13 @@ export class CuentaStore extends VuexModule {
   cuentas: ListState<CuentaOCategoria> = getInitialListState();
 
   /** Ultima busqueda autocomplete y su resultado */
-  lastSearch: SearchResult<number> = {
-    query: { text: '', mode: 'cuenta' },
-    results: []
-  };
+  lastSearch: SearchResult<number> = { query: { text: '', mode: 'cuenta' }, page: emptyPage() };
 
   /** Vuelve el store a su estado incial */
   @Mutation
   reset() {
     this.cuentas = getInitialListState();
-    this.lastSearch = {
-      query: { text: '', mode: 'cuenta' },
-      results: []
-    };
+    this.lastSearch = { query: { text: '', mode: 'cuenta' }, page: emptyPage() };
   }
 
   /** Busca una categoria o cuenta por id */
@@ -374,10 +370,13 @@ export class CuentaStore extends VuexModule {
 
   @Mutation
   searchSuccess(payload: SearchResult<CuentaOCategoria>) {
-    entitiesSuccessInList(this.cuentas, payload.results);
+    // Se agregan las cuentas y categorias encontradas a la cache
+    entitiesSuccessInList(this.cuentas, payload.page.items);
+
+    // Se guarda la ultima busqueda con la query, el numero de pagina y los resultados como ids
     this.lastSearch = {
       query: payload.query,
-      results: payload.results.map(c => c.id)
+      page: { ...payload.page, items: toIdList(payload.page.items) }
     };
   }
   @Mutation

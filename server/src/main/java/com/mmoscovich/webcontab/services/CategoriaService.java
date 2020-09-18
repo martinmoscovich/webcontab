@@ -78,16 +78,12 @@ public class CategoriaService extends CuentaBaseService<Categoria> {
 	 */
 	public List<Categoria> search(Organizacion org, String query) {
 		log.debug("Buscando Categorias con query {}", query);
-
-		final String queryMinuscula = query.toLowerCase();
-
+		
 //		// Usando query
 //		return dao.searchByText(org, queryMinuscula + "%");
 		
 		// Usando cache y filtro en memoria
-		return CollectionUtils.filter(this.list(org), cat -> {
-			return cat.getDescripcion().toLowerCase().contains(queryMinuscula) || cat.getCodigo().startsWith(queryMinuscula);
-		});
+		return new CategoriasSearcher(query).search(this.list(org));
 	}
 	
 	/**
