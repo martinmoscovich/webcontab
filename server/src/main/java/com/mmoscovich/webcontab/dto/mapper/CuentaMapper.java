@@ -8,9 +8,11 @@ import org.mapstruct.BeforeMapping;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.springframework.data.domain.Slice;
 
 import com.mmoscovich.webcontab.dto.CuentaDTO;
 import com.mmoscovich.webcontab.dto.CuentaDTO.TipoItem;
+import com.mmoscovich.webcontab.dto.PageDTO;
 import com.mmoscovich.webcontab.model.Categoria;
 import com.mmoscovich.webcontab.model.Cuenta;
 import com.mmoscovich.webcontab.model.CuentaBase;
@@ -115,4 +117,13 @@ public interface CuentaMapper {
 		return TipoItem.CATEGORIA;
 	}
 	
+	/** Mapea un Page o Slice de CuentaBase a PageDTO de CuentaDTO */
+	default PageDTO<CuentaDTO> toDto(Slice<? extends CuentaBase> page) {
+		return PageDTO.adapt(page, toDto(page.getContent()));
+	}
+	
+	/** Mapea un Page o Slice de CuentaBase a PageDTO de CuentaDTO con los path en cada uno */
+	default PageDTO<CuentaDTO> toDtoWithPath(Slice<? extends CuentaBase> page) {
+		return PageDTO.adapt(page, toDtoWithPath(page.getContent()));
+	}
 }

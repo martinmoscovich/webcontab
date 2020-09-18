@@ -17,7 +17,8 @@
           <b-icon :icon="headerIcon" custom-size="default" />
         </a>
       </div>
-      <div class="level-right" style="padding: 0 15px; margin-top: 0">
+      <slot name="actions-left" />
+      <div class="level-right" v-if="$slots.actions" style="padding: 0 15px; margin-top: 0">
         <slot name="actions" />
       </div>
     </header>
