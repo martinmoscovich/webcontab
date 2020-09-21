@@ -27,7 +27,7 @@
       :item="item"
       :isFirst="index === 0"
       :isLast="index === imputaciones.length - 1"
-      :readonly="readonly"
+      :readonly="itemsReadonly"
       @rowRequested="onRowRequested"
       @input="onImputacionesChange"
       @delete="onDelete(index)"
@@ -74,6 +74,12 @@ export default class ListaImputaciones extends Vue implements ValidableVue {
 
   $refs: { items: ImputacionItem[] };
 
+  /**
+   * Flag que se activa cuando se esta eliminando una imputacion,
+   * durante la actualizacion de la UI
+   */
+  private deletingRow = false;
+
   /** Valida el form de CADA imputacion */
   async validate(): Promise<boolean> {
     const v = await Promise.all(this.$refs.items.map(i => i.validate()));
@@ -83,6 +89,15 @@ export default class ListaImputaciones extends Vue implements ValidableVue {
   /** Resetea todos los forms de imputaciones */
   reset() {
     this.$refs.items?.forEach(i => i.reset());
+  }
+
+  /**
+   * Indica si los items deben estar readonly.
+   * Sera true si la sesion es readonly o si se esta eliminando una fila
+   * (esto es necesario por una cuestion tecnica)
+   */
+  private get itemsReadonly() {
+    return this.readonly || this.deletingRow;
   }
 
   /** Calcula los saldos con el formato correcto y el simbolo de la moneda */
@@ -166,17 +181,30 @@ export default class ListaImputaciones extends Vue implements ValidableVue {
   }
 
   /** Handler de borrar una imputacion */
-  private onDelete(index: number) {
-    // Se elimina localmente (los cambios en el server se hacen en un solo req)
-    if (this.imputaciones.length > 0) this.imputaciones.splice(index, 1);
+  private async onDelete(index: number) {
+    if (this.imputaciones.length === 0) return;
 
-    if (this.imputaciones.length === 0) {
-      // Si no quedo ninguna, debe haber al menos una
-      // Se crea y emite el evento
-      this.onRowRequested();
-    } else {
-      // Se emite evento de cambio
-      this.onImputacionesChange();
+    try {
+      // Se indica que se esta borrando una fila
+      this.deletingRow = true;
+
+      // Se elimina localmente (los cambios en el server se hacen en un solo req)
+      this.imputaciones.splice(index, 1);
+
+      if (this.imputaciones.length === 0) {
+        // Si no quedo ninguna, debe haber al menos una
+        // Se crea y emite el evento
+        this.onRowRequested();
+      } else {
+        // Se emite evento de cambio
+        this.onImputacionesChange();
+      }
+    } finally {
+      // Se espera a que se actualice la UI
+      await this.$nextTick();
+
+      // Se indica que ya no se esta borrando una fila
+      this.deletingRow = false;
     }
   }
 
