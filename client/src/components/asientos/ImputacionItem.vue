@@ -178,6 +178,9 @@ export default class ImputacionItem extends Vue implements ValidableVue, Focusab
 
   /** Handler cuando se modifica la cuenta */
   private onCuentaChange(cuenta: Cuenta) {
+    // Si esta readonly, ignorar cambios del autocomplete
+    // (puede generar conflicto al borrar filas)
+    if (this.readonly) return;
     this.imputacion.cuenta = cuenta;
     this.$emit('input', this.imputacion);
   }
