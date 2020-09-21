@@ -61,14 +61,14 @@ export class Timer<T = void> {
 
   private cancel(log: boolean) {
     if (this.handle) {
-      if (log) console.log('Se cancela %s', this.toString());
+      if (log) console.warn('Se cancela %s', this.toString());
       clearTimeout(this.handle);
       this.handle = null;
     }
   }
 
   private doReset(log: boolean) {
-    if (log) console.log('Se %s %s', this.handle ? 'reinicia' : 'comienza', this.toString());
+    if (log) console.warn('Se %s %s', this.handle ? 'reinicia' : 'comienza', this.toString());
 
     // Si existe el timer, se cancela
     this.cancel(false);
@@ -87,7 +87,7 @@ export class Timer<T = void> {
    * Segun el tipo de timer, se encarga de reiniciar
    */
   private async run() {
-    console.log('Se disparo %s', this.toString());
+    console.warn('Se disparo %s', this.toString());
 
     if (this.config.type === 'once') {
       // Si es de unica vez, se limpia el timer y ejecuta el handler
@@ -103,7 +103,7 @@ export class Timer<T = void> {
         await this.config.onTime(this.config.name, this.config.context);
         this.doReset(false);
       } catch (e) {
-        console.log('Error en el Handler, no se continua %s', this.toString());
+        console.error('Error en el Handler, no se continua %s', this.toString());
         throw e;
       }
     }
