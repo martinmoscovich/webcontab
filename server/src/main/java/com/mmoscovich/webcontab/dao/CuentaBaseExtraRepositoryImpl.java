@@ -156,13 +156,16 @@ public class CuentaBaseExtraRepositoryImpl implements CuentaBaseExtraRepository 
         CriteriaQuery<T> criteria = builder.createQuery(cls);
         Root<T> cuenta = criteria.from(cls);
         
-        // Expresion que equivale a "descripcion || alias". 
+        // Expresion que equivale a "descripcion || alias", en minuscula
         //Se usa para buscar el texto en ambos campos al mismo tiempo
         // Si el alias es null, se usa un string vacio
-        Expression<String> descripcionAlias = CriteriaUtils.concat(builder, "|", cuenta.get(Cuenta_.DESCRIPCION), builder.coalesce(cuenta.get(Cuenta_.ALIAS), ""));
-        Predicate descripcionAliasLike = builder.like(builder.lower(descripcionAlias), "%" + text + "%");
+        Expression<String> descripcionAlias = builder.lower(CriteriaUtils.concat(builder, "|", cuenta.get(Cuenta_.DESCRIPCION), builder.coalesce(cuenta.get(Cuenta_.ALIAS), "")));
+        Expression<Integer> descripcionAliasIndexOf = builder.locate(descripcionAlias, text);
+
+        Predicate descripcionAliasCondition = builder.notEqual(descripcionAliasIndexOf, 0); 
+//        Predicate descripcionAliasCondition = builder.like(descripcionAlias, "%" + text + "%");
         
-		CriteriaCondition cond = new CriteriaCondition().add(descripcionAliasLike);
+		CriteriaCondition cond = new CriteriaCondition().add(descripcionAliasCondition);
 //      .add(builder.like(builder.lower(cuenta.get(Cuenta_.DESCRIPCION)), "%" + text + "%"))
 //      .add(builder.like(builder.lower(cuenta.get(Cuenta_.ALIAS)), "%" + text + "%"));
         
@@ -184,14 +187,15 @@ public class CuentaBaseExtraRepositoryImpl implements CuentaBaseExtraRepository 
         criteria.orderBy( 
     		// Primero las que tienen el texto en la descripcion o alias
         	// Luego las que son hijas, en el orden en que vinieron las categorias (que ya estaban ordenadas)
-    		builder.asc(this.getOrderPorCategorias(builder, cuenta, descripcionAliasLike, categorias)),
+    		builder.asc(this.getOrderPorCategorias(builder, cuenta, descripcionAliasCondition, categorias)),
     		
     		// En caso de ser iguales, van primero las categorias (imputable = 0)
     		builder.asc(cuenta.type()),
     		
-    		// En caso de ser iguales, por longitud de texto donde se encontro
-    		// La logica es que si el texto se encuentra en un campo mas corto, la coincidencia es mayor
-    		builder.asc(this.getOrderPorLongitud(builder, cuenta, descripcionAliasLike)),
+    		// En caso de ser iguales:
+    		// - Si es por descripcion/alias, se pone primero los que tienen la coindicencia primero
+    		// - Si es por categoria padre, se pone primero los de niveles superiores
+    		builder.asc(this.getOrderPorLongitud(builder, cuenta, descripcionAliasIndexOf)),
     		
     		// Finalmente, si todo lo demas es igual, se ordenan por numero de categoria/cuenta
     		builder.asc(cuenta.get(Cuenta_.ORDEN))
@@ -213,11 +217,11 @@ public class CuentaBaseExtraRepositoryImpl implements CuentaBaseExtraRepository 
 	 * @param categorias
 	 * @return
 	 */
-	private Expression<Object> getOrderPorCategorias(CriteriaBuilder builder, Root<?> cuenta, Predicate descripcionAliasLike, List<Categoria> categorias) {
+	private Expression<Object> getOrderPorCategorias(CriteriaBuilder builder, Root<?> cuenta, Predicate descripcionAliasCondition, List<Categoria> categorias) {
 		final Case<Object> select= builder.selectCase();
 			
 		// El primer orden es que coincidan en descripcion o alias directamente	
-		select.when(descripcionAliasLike, 0);
+		select.when(descripcionAliasCondition, 0);
         
 	     // Se hace un filtrado para no incluir categorias hijas de otras que ya estan incluidas
 	     Collection<String> codigos = new ArrayList<>();
@@ -239,9 +243,9 @@ public class CuentaBaseExtraRepositoryImpl implements CuentaBaseExtraRepository 
 	}
 	
 	/**
-	 * Devuelve una expresion para ordenar las cuentas en base a la longitud del texto donde matchea.
+	 * Devuelve una expresion para ordenar las cuentas en base a la descripcion/alias o el codigo.
 	 * <p>
-	 * Si matchea por descripcion o alias se usa la longitud de la descripcion (TODO Que hacer con el alias?).
+	 * Si matchea por descripcion o alias se usa la posicion del texto en la descripcion/alias (si aparece primero va antes)
 	 * <br>Si matchea por hijo, se ordena por la longitud del codigo (mientras menos niveles, mejor).
 	 * </p> 
 	 * @param builder
@@ -249,9 +253,10 @@ public class CuentaBaseExtraRepositoryImpl implements CuentaBaseExtraRepository 
 	 * @param categorias
 	 * @return
 	 */
-	private Expression<Object> getOrderPorLongitud(CriteriaBuilder builder, Root<?> cuenta, Predicate descripcionAliasLike) {
+	private Expression<Object> getOrderPorLongitud(CriteriaBuilder builder, Root<?> cuenta, Expression<Integer> descripcionAliasIndexOf) {
 		return builder.selectCase()
-				.when(descripcionAliasLike, builder.length(cuenta.get(Cuenta_.DESCRIPCION)))
+//				.when(descripcionAliasLike, builder.length(cuenta.get(Cuenta_.DESCRIPCION)))
+				.when(builder.notEqual(descripcionAliasIndexOf, 0), descripcionAliasIndexOf)
 				.otherwise(builder.length(cuenta.get(Cuenta_.ORDEN)));
 	}
 }
