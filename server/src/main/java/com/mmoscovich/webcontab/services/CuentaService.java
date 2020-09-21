@@ -81,12 +81,15 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
      */
 	public Slice<? extends CuentaBase> search(Organizacion org, String query, boolean includeCategories, Pageable pageParams) {
 		log.debug("Buscando Cuentas{} con query {}", includeCategories ? " y Categorias" : "", query);
+    	long start = System.currentTimeMillis();
     	
 		// Se busca categorias con esa descripcion o codigo primero
 		List<Categoria> categorias = catService.search(org, query);
 		
 		// Se busca cuentas o categorias que tienen esa descripcion, codigo o que son hijas de las categorias encontradas
-		return includeCategories ? baseDao.searchAllByText(org, query.toLowerCase(), categorias, pageParams) : baseDao.searchCuentasByText(org, query.toLowerCase(), categorias, pageParams);
+		Slice<? extends CuentaBase> result = includeCategories ? baseDao.searchAllByText(org, query.toLowerCase(), categorias, pageParams) : baseDao.searchCuentasByText(org, query.toLowerCase(), categorias, pageParams);
+		log.debug("Query ejecutada en {}ms", System.currentTimeMillis() - start);
+		return result;
 	}
 	
 	/** 
