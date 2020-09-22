@@ -6,12 +6,14 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.validation.constraints.Positive;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -20,9 +22,11 @@ import org.springframework.stereotype.Component;
 import com.mmoscovich.webcontab.services.DBService;
 import com.mmoscovich.webcontab.services.DBService.BackupItem;
 import com.mmoscovich.webcontab.services.DBService.BackupType;
+import com.mmoscovich.webcontab.services.LogReader;
 import com.mmoscovich.webcontab.updater.SemVersion;
 import com.mmoscovich.webcontab.updater.UpdateService;
 import com.mmoscovich.webcontab.updater.Updater.UpdateStatus;
+import com.sun.istack.NotNull;
 
 /**
  * Resource administrativo
@@ -37,6 +41,9 @@ public class AdminResource {
 	
 	@Inject
 	private UpdateService updateService;
+	
+	@Inject
+	private LogReader logReader;
 	
 	/*************************************
 	 * 			  DB BACKUP
@@ -145,5 +152,21 @@ public class AdminResource {
 	@Path("update/apply")
 	public void runUpdate() {
 		this.updateService.update();
+	}
+	
+	/***********************************
+	 * LOGS
+	 ***********************************/
+	
+	/**
+	 * Obtiene las ultimas n lineas del archivo de log.
+	 * @param numLines lineas a devolver
+	 * @return un string con el contenido del log
+	 * @throws IOException
+	 */
+	@GET
+	@Path("logs")
+	public String getLog(@QueryParam("n") @NotNull @Positive int numLines) throws IOException {
+		return logReader.read(numLines);
 	}
 }
