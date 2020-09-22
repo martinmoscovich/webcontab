@@ -33,6 +33,6 @@ logging.level:
   #com.fasterxml: DEBUG
   org.hibernate: WARN #INFO
   #org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: INFO
-  org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  #org.hibernate.type.descriptor.sql.BasicBinder: TRACE
   com.mmoscovich: DEBUG
   

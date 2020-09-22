@@ -132,6 +132,6 @@ public class Ejercicio extends PersistentEntity {
 	
 	@Override
 	public String toString() {
-		return String.format("Ejercicio [%s, periodo: %s -> %s]", organizacion, inicio, finalizacion);  
+		return String.format("Ejercicio [%s -> %s] de la organizacion '%s' (%s)", inicio, finalizacion, organizacion.getNombre(), organizacion.getCuit());  
 	}
 }

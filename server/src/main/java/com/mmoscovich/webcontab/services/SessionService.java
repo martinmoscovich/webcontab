@@ -36,9 +36,12 @@ import com.mmoscovich.webcontab.model.User;
 import com.mmoscovich.webcontab.model.User.UserType;
 import com.mmoscovich.webcontab.security.UserAdapter;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Servicio que maneja la sesion del usuario.
  */
+@Slf4j
 @Service
 @DependsOn("webSecurityConfig") // Necesario para evitar dep circular al inyectar authMapper
 public class SessionService {
@@ -177,9 +180,10 @@ public class SessionService {
 		// Lista de roles del usuario en la org.
 		List<String> roles = new ArrayList<>();
 		
+		Organizacion org = null;
 		if (orgId != null) {
 			// Se busca la organizacion
-			Organizacion org = orgDao.findById(orgId).orElseThrow(() -> new EntityNotFoundException(Organizacion.class, orgId));
+			org = orgDao.findById(orgId).orElseThrow(() -> new EntityNotFoundException(Organizacion.class, orgId));
 			
 			// Se busca si el usuario es miembro y con que rol
 			// Los roles de org tiene el prefijo "ORG:"
@@ -198,6 +202,12 @@ public class SessionService {
 		updateRoles(roles);
 		
 		// Setea la org
+		if(org != null) {
+			log.info("El {} ingresa a la {} con los roles {}",  user, org, roles);
+		} else {
+			log.info("El {} sale de la organizacion actual. Roles {}", roles);
+		}
+		
 		ctx.setOrganizacionId(orgId);
 	}
 
@@ -212,6 +222,10 @@ public class SessionService {
 			// Busca el ejercicio y comprueba que pertenezca a la organizacion
 			Ejercicio ej = ejDao.findById(ejId).orElseThrow(() -> new EntityNotFoundException(Ejercicio.class, ejId));
 			if(!ej.perteceneA(this.getOrganizacionOrThrow())) throw new EntityNotFoundException(Ejercicio.class, ejId);
+			
+			log.info("El {} entra en el {}", ej);
+		} else {
+			log.info("El {} sale del ejercicio");
 		}
 		ctx.setEjercicioId(ejId);
 	}

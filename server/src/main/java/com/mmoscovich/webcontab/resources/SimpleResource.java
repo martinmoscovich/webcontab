@@ -25,6 +25,8 @@ import com.mmoscovich.webcontab.exception.InvalidRequestException;
 import com.mmoscovich.webcontab.model.PersistentEntity;
 import com.mmoscovich.webcontab.util.UpdateValidation;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Resource base para ABMs simples.
  *
@@ -32,6 +34,7 @@ import com.mmoscovich.webcontab.util.UpdateValidation;
  * @param <D> DTO
  */
 @Produces(MediaType.APPLICATION_JSON)
+@Slf4j
 public abstract class SimpleResource<T extends PersistentEntity, D> {
 
     protected abstract JpaRepository<T, Long> getRepo();
@@ -97,6 +100,8 @@ public abstract class SimpleResource<T extends PersistentEntity, D> {
     @Path("{id}")
     @Transactional
     public void eliminar(@PathParam("id") @NotNull @Min(1) Long id) throws EntityNotFoundException {
+    	log.debug("Eliminando {} con id {} de la organizacion {}", this.getEntityClass().getSimpleName(), id);
+    	
     	T entity = this.getByIdOrThrow(id);
     	
     	// Se llama al metodo para validar si se permite eliminar

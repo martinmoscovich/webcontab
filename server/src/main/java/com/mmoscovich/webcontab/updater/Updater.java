@@ -146,6 +146,8 @@ public class Updater {
 	 * @return info de la actualizacion pendiente o null si no hay 
 	 */
 	public UpdateInfo checkRemoteForUpdate() {
+		log.info("Comprobando si hay actualizaciones pendientes");
+		
 		// Se obtiene la info de la ultima version en el server
 		UpdateInfo updateInfo = this.getUpdateInfo(this.config.getRemoteVersionURL());
 		
@@ -171,7 +173,12 @@ public class Updater {
 			UpdateInfo updateInfo = this.checkRemoteForUpdate();
 			
 			// Si no es necesaria la descarga, no se hace mas nada
-			if(updateInfo == null) return;
+			if(updateInfo == null) {
+				log.info("No hay actualizaciones para descargar");
+				return;
+			}
+			
+			log.info("Descargando actualizacion");
 			
 			// Se actualiza el status con la version a descargar
 			status.change(UpdateAction.DOWNLOADING, updateInfo.getVersion());
@@ -210,6 +217,8 @@ public class Updater {
 		// Si el actualizador esta ocupado, no se puede continuar
 		this.checkIdle();
 		
+		log.info("Actualizando aplicacion");
+		
 		try {
 			// Se cambia el status
 			status.change(UpdateAction.UPDATING, this.lastDownloadedUpdate);
@@ -226,6 +235,7 @@ public class Updater {
 			Path tmpDir = Files.createTempDirectory(this.tmpBaseDir, updateRelease.getReleaseVersion().toString() + "_");
 			
 			// Se descomprime el update en el directorio temporal
+			log.debug("Descomprimiendo actualizacion");
 			ZipUtils.unzip(updateFile, tmpDir);
 			
 			// Esto en realidad no es necesario, ya lo tengo
@@ -236,6 +246,7 @@ public class Updater {
 			boolean mustUpdateServer = this.analyzeAndLogRelease(updateRelease);
 
 			// Se recorren los archivos del update
+			log.debug("Actualizando archivos");
 			for(Path file : FileUtils.getRootPaths(tmpDir)) {
 				String destName = file.getFileName().toString(); 
 				
