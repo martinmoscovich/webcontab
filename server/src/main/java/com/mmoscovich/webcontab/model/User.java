@@ -61,4 +61,9 @@ public class User extends PersistentEntity {
     	this.email = email;
     	this.avatarUrl = avatarUrl;
     }
+    
+    @Override
+    public String toString() {
+    	return String.format("Usuario '%s'", this.username); 
+    }
 }

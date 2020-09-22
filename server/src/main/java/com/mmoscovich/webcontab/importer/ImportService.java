@@ -64,6 +64,8 @@ public class ImportService {
 	 * @throws IOException
 	 */
 	public ImportTask create(Path file, String fileName, Organizacion orgPermitida) throws IOException {
+		log.info("Analizando el archivo {} y creando la tarea de importacion", fileName);
+		
 		// Delega la creacion de la tarea al Importer, que es quien puede leer el archivo
 		ImportTask task = importer.read(file, fileName);
 		
@@ -88,6 +90,7 @@ public class ImportService {
 	 */
 	@Async
 	public void run(ImportTask task, CuentaImportStrategy cuentaStrategy, boolean includeAsientos) {
+		log.info("Importando archivo {}", task.getFile().getFileName().toString());
 		this.importer.run(task, cuentaStrategy, includeAsientos);
 	}
 	
