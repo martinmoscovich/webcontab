@@ -1,10 +1,11 @@
-import { toEntity } from '@/core/ajax/helpers';
+import { toEntity, queryString } from '@/core/ajax/helpers';
 import { AxiosInstance } from 'axios';
 import { UpdateStatus, mapUpdateStatusFromServer, mapDbBackupItem, BackupItem } from '@/model/admin/AdminModels';
 
 const BASE_URL = '/admin';
 const DB_URL = BASE_URL + '/db';
 const UPDATE_URL = BASE_URL + '/update';
+const LOGS_URL = BASE_URL + '/logs';
 
 /**
  * API de mantenimiento
@@ -54,5 +55,13 @@ export class AdminApi {
   /** Instala una actualizacion */
   async updateApply() {
     await this.http.post(UPDATE_URL + '/apply');
+  }
+
+  /*****************************************
+   *                LOG
+   *****************************************/
+
+  logRead(numLines: number) {
+    return this.http.get(LOGS_URL + queryString({ n: numLines })).then(r => r.data as string);
   }
 }
