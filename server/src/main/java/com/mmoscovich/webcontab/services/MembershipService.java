@@ -17,9 +17,12 @@ import com.mmoscovich.webcontab.model.Organizacion;
 import com.mmoscovich.webcontab.model.User;
 import com.mmoscovich.webcontab.util.CollectionUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Servicio que maneja las membresias de un usuario a una organizacion.
  */
+@Slf4j
 @Service
 public class MembershipService {
 	
@@ -69,7 +72,7 @@ public class MembershipService {
 	public MemberDTO addMember(Organizacion org, Long userId, Rol rol) {
 		// Se busca el usuario
 		User user = userService.getByIdOrThrow(userId);
-		
+
 		// Se busca si ya existe esta membresia, o se crea una
 		Member member = dao.findByUserAndOrganizacion(user, org).orElse(new Member());
 		
@@ -77,6 +80,9 @@ public class MembershipService {
 		if(member.getId() == null) {
 			member.setUser(user);
 			member.setOrganizacion(org);
+			log.debug("Agregando al {} en la {} con el rol '{}'", user, org, rol);
+		} else {
+			log.debug("Actualizando el rol del {} a '{}' en la {}", user, rol, org);
 		}
 		
 		// Se asigna o actualiza el rol
@@ -96,6 +102,8 @@ public class MembershipService {
 		
 		Member member = dao.findByUserAndOrganizacion(user, org).orElseThrow(() -> new EntityNotFoundException("No existe la membresia"));
 		
+		log.debug("Quitando al {} de la {}", user, org);
+		
 		dao.delete(member);
 	}
 	
@@ -105,6 +113,7 @@ public class MembershipService {
 	 */
 	@Transactional
 	public void removeAll(Organizacion org) {
+		log.debug("Quitando todos los miembros de la {}", org);
 		dao.deleteByOrganizacion(org);
 	}
 	

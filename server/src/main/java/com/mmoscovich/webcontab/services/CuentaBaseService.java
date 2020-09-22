@@ -111,7 +111,6 @@ public abstract class CuentaBaseService<T extends CuentaBase> {
      * @throws CuentaUtilizadaException
      */
     protected void merge(T existing, T changes) throws InvalidRequestException, EntityNotFoundException, CuentaUtilizadaException {
-    	log.debug("Actualizando {} {} ({}) con ({} - {})", existing.getClass().getSimpleName(), existing.getDescripcion(), existing.getId(), changes.getDescripcion(), changes.getActiva());
 
     	// Por ahora solo se puede modificar descripcion, alias y si esta activa
     	

@@ -4,6 +4,12 @@ declare module 'v-click-outside' {
   export default a;
 }
 
+declare module '@femessage/log-viewer' {
+  import { Component } from 'vue/types/umd';
+  const LogViewer: Component;
+  export default LogViewer;
+}
+
 /**
  * Tipos para el Validador
  */

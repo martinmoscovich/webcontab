@@ -74,6 +74,9 @@ public class EjercicioService {
 	@Transactional
 	public void eliminar(Organizacion organizacion, Ejercicio ej) {
 		ej = this.getByIdOrThrow(organizacion, ej.getId());
+		
+		log.debug("Eliminando {}", ej);
+		
 		asientoService.eliminarTodos(ej);
 		dao.delete(ej);
 		em.flush();
@@ -124,7 +127,7 @@ public class EjercicioService {
 
 		// Si no existe cierre anterior, se simula dicho asiento (pero sin modificar ese ejercicio)
 		if(asientoCierreAnterior == null) {
-			log.debug("El ejercicio anterior no esta cerrado, se calcula la apertura sin los asientos requeridos");
+			log.info("El ejercicio anterior no esta cerrado, se calcula la apertura sin los asientos requeridos");
 			asientoCierreAnterior = asientoService.simularCierre(last);
 		}
 
@@ -154,7 +157,7 @@ public class EjercicioService {
 	 */
 	@Transactional
 	public Ejercicio cerrarEjercicio(Ejercicio ej) throws EjercicioFinalizadoException {
-		log.info("Cerrando ejercicio de organizacion {} y periodo [{} - {}]", ej.getOrganizacion().getNombre(), ej.getInicio(), ej.getFinalizacion());
+		log.info("Cerrando {}", ej);
 
 		// Si ya esta cerrado, lanzar error
 		if(ej.isFinalizado()) throw new EjercicioFinalizadoException(ej);
@@ -195,13 +198,14 @@ public class EjercicioService {
 	 */
 	@Transactional
 	public Ejercicio reabrirEjercicio(Ejercicio ej) throws ConflictException {
-		log.info("Reabriendo ejercicio de organizacion {} y periodo [{} - {}]", ej.getOrganizacion().getNombre(), ej.getInicio(), ej.getFinalizacion());
+		log.info("Reabriendo {}", ej);
 		if(!ej.isFinalizado()) throw new ConflictException("El ejercicio no esta cerrado");
 
 		// Se pone en no finalizado primero para que al eliminar los asientos no lance error.
 		ej.setFinalizado(false);
 
 		// Se eliminan los asientos de refundicion y cierre
+		log.info("Se eliminan los asientos de refundicion y cierre en el ejercicio {}", ej);
 		asientoService.eliminar(ej, Set.of(ej.getAsientoRefundicionId(), ej.getAsientoCierreId()), true);
 
 		ej.setAsientoRefundicionId(null);
@@ -281,6 +285,7 @@ public class EjercicioService {
 		asientoService.renumerarAsientos(ej);
 		
 		// Se actualiza la fecha de confirmacion
+		log.info("Se actualiza la fecha de confirmacion a {} en el ejericicio {}", fechaConfirmacion, ej);
 		ej.setFechaConfirmada(fechaConfirmacion);
 		
 		return dao.save(ej);

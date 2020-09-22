@@ -4,6 +4,9 @@ spring.h2.console:
   path: /h2
   
 spring.datasource.url: jdbc:h2:file:./${webcontab.db.dir}/webcontab;LAZY_QUERY_EXECUTION=1;MAX_MEMORY_ROWS=5000;PASSWORD_HASH=TRUE;IFEXISTS=TRUE";
+
+logging.file: logs/webcontab.log
+logging.file.max-history: 10
   
 logging.level:
   root: WARN

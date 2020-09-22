@@ -117,6 +117,8 @@ public class CategoriaService extends CuentaBaseService<Categoria> {
 	 */
 	@Transactional(readOnly = true)
 	public Path exportarPlan(Organizacion org, Categoria raiz) {
+		log.debug("Exportando plan de cuentas de la organizacion {} para la categoria {}", org, raiz.getDescripcion());
+		
 		// Ejecuta la query que obtiene toda la descendencia
     	Stream<CuentaBase> cuentas = raiz == null ? dao.getPlan(org) : dao.getPlan(org, raiz.getCodigo() + ".%");
     	
@@ -139,6 +141,12 @@ public class CategoriaService extends CuentaBaseService<Categoria> {
 	 */
     @Transactional
     public Categoria crear(Organizacion org, Categoria categoria, Short numero) throws InvalidRequestException, ConflictException, EntityNotFoundException {
+    	if(categoria.getCategoria() == null || categoria.getCategoria().getId() == null) {
+    		log.debug("Creando categoria raiz {} [{}] en la organizacion {}", categoria.getDescripcion(), numero, org);
+    	} else {
+    		log.debug("Creando categoria {} en la organizacion {}", categoria.getDescripcion(), org);
+    	}
+    	
     	// Se validan y completan los datos comunes entre categorias y cuentas
     	// Se permite que sean categorias raiz
     	super.validarYCompletar(org, categoria, true, numero);
@@ -148,6 +156,10 @@ public class CategoriaService extends CuentaBaseService<Categoria> {
     	// Flag de categoria de resultado
     	if(categoria.getResultado() == null) categoria.setResultado(false);
 
+    	if(categoria.getCategoria() != null) {
+    		log.debug("El codigo de la categoria es {} (categoria padre: {})", categoria.getCodigo(), categoria.getCategoria().getDescripcion());
+    	}
+    	
     	// Se guarda
 		return dao.save(categoria);
     }
@@ -166,6 +178,8 @@ public class CategoriaService extends CuentaBaseService<Categoria> {
     public Categoria actualizar(Organizacion org, Categoria categoria) throws InvalidRequestException, EntityNotFoundException, CuentaUtilizadaException {
     	// Se busca la categoria persistida
     	Categoria existing = this.getByIdOrThrow(org, categoria.getId());
+  
+    	log.debug("Actualizando la categoria {} [{}] en la organizacion {}",existing.getDescripcion(), existing.getCodigo(), org);
     	
     	// Se actualizan los datos comunes entre categoria y cuenta
     	this.merge(existing, categoria);
@@ -191,6 +205,8 @@ public class CategoriaService extends CuentaBaseService<Categoria> {
     @Transactional
     public void eliminar(Organizacion organizacion, Long id) throws EntityNotFoundException, CuentaUtilizadaException {
     	Categoria categoria = this.getByIdOrThrow(organizacion, id);
+
+    	log.debug("Eliminando la categoria {} [{}] en la organizacion {}", categoria.getDescripcion(), categoria.getCodigo(), organizacion);
     	
     	// Si hay categorias o cuentas hijas, no se permite eliminar 
     	if(this.findByCategoria(categoria).size() > 0) throw new CuentaUtilizadaException(categoria);
@@ -203,6 +219,8 @@ public class CategoriaService extends CuentaBaseService<Categoria> {
 	 */
     @Transactional
     public void eliminarTodas(Organizacion organizacion) {
+    	log.debug("Se eliminan todas las categorias de la organizacion {}", organizacion);
+    	
     	dao.removeHierarchyByOrganizacion(organizacion);
     	dao.deleteByOrganizacion(organizacion);
     }

@@ -180,6 +180,9 @@ public class AsientoService {
 	@Transactional
 	public Asiento crear(Asiento asiento, Ejercicio ejercicio)
 			throws InvalidRequestException, EjercicioFinalizadoException, EjercicioFechaInvalidaException {
+		
+		log.debug("Creando asiento de fecha {} en el ejercicio {}", asiento.getFecha(), ejercicio);
+		
 		// No se puede crear un asiento luego de finalizado el ejercicio
 		ejercicio.validateActivo();
 
@@ -200,6 +203,8 @@ public class AsientoService {
 		// Se le asigna el proximo numero disponible en el ejercicio
 		asiento.setNumero(this.getProximoNumero(ejercicio));
 		
+		log.debug("Al asiento se le asigno el numero {}", asiento.getNumero());
+		
 		// Se persiste el asiento y sus imputaciones
 		return this.persistir(asiento);
 	}
@@ -219,6 +224,8 @@ public class AsientoService {
 	public Asiento actualizar(Ejercicio ejercicio, Asiento asiento) throws EntityNotFoundException, InvalidRequestException, EjercicioFinalizadoException, EjercicioFechaInvalidaException {
 		Asiento existing = this.getByIdOrThrow(ejercicio, asiento.getId(), true);
 
+		log.debug("Actualizando asiento numero {} (id: {}) en el ejercicio {}", existing.getNumero(), asiento.getId(), ejercicio);
+		
 		// No se puede modificar un asiento luego de finalizado el ejercicio
 		existing.getEjercicio().validateActivo();
 		
@@ -242,6 +249,7 @@ public class AsientoService {
 		existing.validar(true, true);
 
 		// Se eliminan las imputaciones que se quitaron
+		if(!imputacionesABorrar.isEmpty()) log.debug("Se eliminaron {} imputaciones del asiento numero {}", imputacionesABorrar.size(), asiento.getNumero());
 		imputacionService.eliminar(imputacionesABorrar);
 
 		// Se persiste el asiento y sus imputaciones (nuevas y actualizadas)
@@ -261,6 +269,8 @@ public class AsientoService {
 	public void eliminar(Ejercicio ejercicio, Long id) throws EntityNotFoundException, EjercicioFinalizadoException, EjercicioFechaInvalidaException {
 		Asiento asiento = this.getByIdOrThrow(ejercicio, id, false);
 
+		log.debug("Se elimina el asiento numero {} (id: {}) del ejercicio {}", asiento.getNumero(), id, ejercicio);
+		
 		// No se puede eliminar un asiento luego de finalizado el ejercicio
 		ejercicio.validateActivo();
 		
@@ -295,6 +305,7 @@ public class AsientoService {
 		
 		// Se recorren los asientos
 		for(Asiento asiento : asientoDao.findByIds(ejercicio, ids)) {
+			log.debug("Se elimina el asiento numero {} (id: {}) del ejercicio {}", asiento.getNumero(), asiento.getId(), ejercicio);
 			
 			if(!paraReapertura) {
 				// No se pueden borrar los asientos especiales (apertura, cierre, etc)
@@ -322,6 +333,8 @@ public class AsientoService {
 	 */
 	@Transactional
 	public void eliminarTodos(Ejercicio ejercicio) {
+		log.debug("Eliminando todos los asientos del ejercicio con id {}: {}", ejercicio.getId(), ejercicio);
+		
 		imputacionService.eliminarByEjercicio(ejercicio);
 		asientoDao.deleteByEjercicio(ejercicio);
 	}
@@ -441,9 +454,7 @@ public class AsientoService {
 		});
 		
 		Asiento cierre = this.persistir(asiento);
-		if(log.isDebugEnabled()) {
-			log.debug("Se creo el asiento de Cierre de ejercicio con numero {} con {} imputaciones", cierre.getNumero(), cierre.getImputaciones().size());
-		}
+		log.info("Se creo el asiento de Cierre de ejercicio con numero {} con {} imputaciones en el {}", cierre.getNumero(), cierre.getImputaciones().size(), ejercicio);
 		
 		return cierre;
 	}
@@ -493,15 +504,15 @@ public class AsientoService {
 		asiento.agregarImputaciones(this.crearImputacionesDeBalanceoDeResultados(balanceadoras, saldos));
 		
 		if(asiento.getImputaciones().isEmpty()) {
-			log.warn("Las cuentas de resultado tienen saldo en cero, no se genera el asiento de refundicion de cuentas de resultado");
+			log.warn("Las cuentas de resultado tienen saldo en cero, no se genera el asiento de refundicion de cuentas de resultado ({})", ejercicio);
 			return Optional.empty();
 
 		} else {
 			Asiento refundicion = this.persistir(asiento);
 			if(log.isDebugEnabled()) {
 				log.debug("Se encontraron {} cuentas de resultados con saldo <> 0 en el ejercicio y {} monedas distintas", cantCuentas, saldos.size());
-				log.debug("Se creo el asiento de Refundicion de cuentas de resultado con numero {} y {} imputaciones", asiento.getNumero(), cantCuentas + saldos.size());
 			}
+			log.info("Se creo el asiento de Refundicion de cuentas de resultado con numero {} y {} imputaciones en el {}", asiento.getNumero(), cantCuentas + saldos.size(), ejercicio);
 			return Optional.of(refundicion);
 		}
 	}
@@ -527,10 +538,10 @@ public class AsientoService {
 		// Se calculan las imputaciones del asiento y, si existen, se guarda
 		if(this.completarAsientoDeAjustePorInflacion(asiento)) {
 			asiento = this.persistir(asiento);
-			log.info("Se creo el asiento de Ajuste por inflacion con numero {} y {} imputaciones", asiento.getNumero(), asiento.getImputaciones().size());
+			log.info("Se creo el asiento de Ajuste por inflacion con numero {} y {} imputaciones para {}", asiento.getNumero(), asiento.getImputaciones().size(), ejercicio);
 			return Optional.of(asiento);
 		} else {
-			log.warn("No hay cuentas ajustables por inflacion o tienen saldo en cero, no se genera el asiento de ajuste");
+			log.warn("No hay cuentas ajustables por inflacion o tienen saldo en cero, no se genera el asiento de ajuste ({})", ejercicio);
 			return Optional.empty();
 		}
 	}
@@ -556,11 +567,11 @@ public class AsientoService {
 		// Se regeneran las imputaciones y se persiste
 		if(this.completarAsientoDeAjustePorInflacion(asiento)) {
 			asiento = this.persistir(asiento);
-			log.info("Se recalculo el asiento de Ajuste por inflacion con numero {} y {} imputaciones", asiento.getNumero(), asiento.getImputaciones().size());
+			log.info("Se recalculo el asiento de Ajuste por inflacion con numero {} y {} imputaciones en el {}", asiento.getNumero(), asiento.getImputaciones().size(), asiento.getEjercicio());
 			return Optional.of(asiento);
 		} else {
 			// Si devuelve el asiento vacio, se elimina el que existia
-			log.warn("Las cuentas ajustables por inflacion tienen saldo en cero, se elimina el asiento de ajuste");
+			log.warn("Las cuentas ajustables por inflacion tienen saldo en cero, se elimina el asiento de ajuste ({})", asiento.getEjercicio());
 			asientoDao.delete(asiento);
 			
 			return Optional.empty();

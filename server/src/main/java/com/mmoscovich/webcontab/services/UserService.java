@@ -19,10 +19,13 @@ import com.mmoscovich.webcontab.exception.InvalidRequestException;
 import com.mmoscovich.webcontab.model.User;
 import com.mmoscovich.webcontab.model.User.UserType;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Servicio de manejo de usuarios
  *
  */
+@Slf4j
 @Service
 public class UserService {
 
@@ -71,6 +74,7 @@ public class UserService {
 	 * @return
 	 */
 	public List<User> search(String query) {
+		log.debug("Buscando usuario con username o nombre que empiece con {}", query);
 		return this.dao.searchByText(query.toLowerCase() + "%");
 	}
 	
@@ -96,6 +100,8 @@ public class UserService {
 		// Se crea el usuario usando el hash del password
 		User user = new User(dto.getUsername(), passwordEncoder.encode(dto.getPassword()), dto.getType(), dto.getName(), dto.getEmail(), dto.getAvatarUrl());
 		
+		log.debug("Se crea el {}", user);
+		
 		return dao.save(user);
 	}
 	
@@ -110,6 +116,8 @@ public class UserService {
 	@Transactional
 	public User update(UserWithPasswordDTO dto) throws EntityNotFoundException, AuthorizationException, ConflictException {
 		User existing = dao.findById(dto.getId()).orElseThrow(() -> new EntityNotFoundException(User.class, dto.getId()));
+		
+		log.debug("Actualizando el {}", existing);
 		
 		// Solo admin puede cambiar el tipo de usuario
 		if(dto.getType() != null && !dto.getType().equals(existing.getType())) {

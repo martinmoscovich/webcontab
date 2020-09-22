@@ -27,10 +27,12 @@ import com.mmoscovich.webcontab.util.CollectionUtils;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Servicio de imputaciones
  */
+@Slf4j
 @Service
 public class ImputacionService {
 	/** Comparador de monedas para ordenar las imputaciones */
@@ -86,6 +88,8 @@ public class ImputacionService {
 	 */
 	@Transactional
 	public void eliminarByEjercicio(Ejercicio ejercicio) {
+		log.debug("Eliminando todos las imputaciones del ejercicio con id {}: {}", ejercicio.getId(), ejercicio);
+		
 		dao.deleteByEjercicio(ejercicio);
 	}
 	

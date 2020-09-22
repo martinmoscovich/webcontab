@@ -128,8 +128,11 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
      */
     @Transactional
     public Cuenta crear(Organizacion org, Cuenta cuenta, Short numero) throws InvalidRequestException, ConflictException, EntityNotFoundException {
+    	log.debug("Creando cuenta {} en la organizacion {}", cuenta.getDescripcion(), org);
     	// valida y completa los datos faltantes
     	this.validarYCompletar(org, cuenta, numero);
+    	
+    	log.debug("El codigo de la cuenta es {} (categoria {})", cuenta.getCodigo(), cuenta.getCategoria().getDescripcion());
     	
     	// Guarda
     	return dao.save(cuenta);
@@ -149,6 +152,8 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
     public Cuenta actualizar(Organizacion org, Cuenta cuenta) throws InvalidRequestException, EntityNotFoundException, CuentaUtilizadaException {
     	// Se busca la cuenta persistida
     	Cuenta existing = this.getByIdOrThrow(org, cuenta.getId());
+
+    	log.debug("Actualizando cuenta {} [{}] en la organizacion {}", existing.getDescripcion(), existing.getCodigo(), org);
     	
     	// Se actualizan los datos comunes entre categoria y cuenta
     	this.merge(existing, cuenta);
@@ -295,6 +300,8 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
     	// Se busca la cuenta
     	Cuenta cuenta = this.getByIdOrThrow(organizacion, id);
     	
+    	log.debug("Eliminando cuenta {} [{}] de la organizacion {}", cuenta.getDescripcion(), cuenta.getCodigo(), organizacion);
+    	
     	// Si la cuenta tiene imputaciones, no se puede eliminar
     	if(imputacionService.cuentaTieneImputaciones(cuenta)) throw new CuentaUtilizadaException(cuenta);
     	
@@ -306,6 +313,7 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
 	 */
     @Transactional
     public void eliminarTodas(Organizacion organizacion) {
+    	log.debug("Se eliminan todas las cuentas de la organizacion {}", organizacion);
     	dao.deleteByOrganizacion(organizacion);
     }
     
@@ -331,6 +339,8 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
      * @param moneda moneda que debe tener la cuenta
      */
     private void desactivaCuentaBalanceadoraResultados(Organizacion org, Moneda moneda) {
+    	log.debug("Desactivando cuentas que balancean resultados de la organizacion {} para la moneda {}", org, moneda);
+    	
     	// Obtiene las cuentas que balancean resultados
     	this.findCuentasQueBalanceanResultados(org).stream()
     	// Busca la cuenta que tiene la moneda deseada
@@ -349,6 +359,8 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
      * @param moneda moneda que debe tener la cuenta
      */
     private void desactivaCuentaBalanceadoraAjustables(Organizacion org, Moneda moneda) {
+    	log.debug("Desactivando cuentas que balancean a las ajustables de la organizacion {} para la moneda {}", org, moneda);
+    	
     	// Obtiene las cuentas que balancean resultados
     	this.findCuentasQueBalanceanAjustables(org).stream()
     	// Busca la cuenta que tiene la moneda deseada
@@ -369,6 +381,8 @@ public class CuentaService extends CuentaBaseService<Cuenta> {
      */
     @Transactional
     public void desactivarCuentasAjustablesYBalanceadora(Moneda moneda) {
+    	log.debug("Desactivando cuentas ajustables y las que las balancean para la moneda {} en TODAS las organizaciones", moneda);
+    	
     	dao.desactivarCuentasAjustablesYBalanceadora(moneda);
     }
     
