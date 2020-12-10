@@ -80,8 +80,7 @@ public class Ejercicio extends PersistentEntity {
 	
 	/** 
 	 * Valida que el asiento se pueda borrar.
-	 * <p>No permite borrar asientos de otros ejercicios ni los especiales 
-	 * (apertura, cierre, refundicion y ajuste por inflacion).</p> 
+	 * <p>No permite borrar asientos de otros ejercicios ni los de apertura, refundicion y cierre.</p> 
 	 * @param asiento
 	 * @throws InvalidRequestException si no se permite el borrado
 	 */
@@ -91,9 +90,6 @@ public class Ejercicio extends PersistentEntity {
 		// No deberia pasar nunca
 		if(!asiento.perteneceA(this)) throw new InvalidRequestException("No se puede borrar un asiento de otro ejercicio");
 		
-		if(asiento.getId().equals(this.asientoAjusteId)) {
-			throw new InvalidRequestException("No se puede eliminar el asiento de ajuste por inflacion");
-		}
 		if(asiento.getId().equals(this.asientoAperturaId)) {
 			throw new InvalidRequestException("No se puede eliminar el asiento de apertura del ejercicio");
 		}

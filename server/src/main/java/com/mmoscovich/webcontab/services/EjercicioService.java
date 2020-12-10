@@ -290,4 +290,25 @@ public class EjercicioService {
 		
 		return dao.save(ej);
 	}
+	
+	/**
+	 * Recibe un ejercicio y un id de asiento y, si este corresponde a alguno de los asientos especiales,
+	 * lo desasocia (pone la referencia en null).
+	 * @param ejercicio
+	 * @param asientoId
+	 * @return el ejercicio actualizado
+	 */
+	@Transactional
+	public Ejercicio desasociarAsientosEspeciales(Ejercicio ejercicio, Asiento asiento) {
+		if(asiento == null || asiento.getId() == null) return ejercicio;
+		
+		ejercicio = this.getByIdOrThrow(ejercicio.getOrganizacion(), ejercicio.getId());
+		
+		if(asiento.getId().equals(ejercicio.getAsientoAperturaId())) ejercicio.setAsientoAperturaId(null);
+		if(asiento.getId().equals(ejercicio.getAsientoAjusteId())) ejercicio.setAsientoAjusteId(null);
+		if(asiento.getId().equals(ejercicio.getAsientoRefundicionId())) ejercicio.setAsientoRefundicionId(null);
+		if(asiento.getId().equals(ejercicio.getAsientoCierreId())) ejercicio.setAsientoCierreId(null);
+		
+		return dao.save(ejercicio);
+	}
 }
