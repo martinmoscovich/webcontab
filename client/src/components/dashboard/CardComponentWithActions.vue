@@ -18,7 +18,7 @@
         </a>
       </div>
       <slot name="actions-left" />
-      <div class="level-right" v-if="$slots.actions" style="padding: 0 15px; margin-top: 0">
+      <div class="level-right" style="padding: 0 15px; margin-top: 0">
         <slot name="actions" />
       </div>
     </header>
@@ -30,7 +30,7 @@
 
 <script>
 export default {
-  name: 'CardComponent',
+  name: 'CardComponentWithActions',
   props: {
     title: {
       type: String,
