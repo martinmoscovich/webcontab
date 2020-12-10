@@ -67,6 +67,9 @@ public class AsientoService {
 	
 	@Inject
 	private InflacionRepository inflacionDao;
+	
+	@Inject
+	private EjercicioService ejercicioService;
 
 	/**
 	 * Devuelve una pagina de asientos del ejercicio especificado, dentro del periodo indicado.
@@ -280,6 +283,9 @@ public class AsientoService {
 		// No se puede eliminar un asiento si esta dentro de los confirmados.
 		ejercicio.validateFecha(asiento.getFecha());
 		
+		// Si el asiento es uno de los especiales, lo desasocia del ejercicio
+		ejercicioService.desasociarAsientosEspeciales(ejercicio, asiento);
+
 		// Elimina las imputaciones del asiento
 		imputacionService.eliminarByAsiento(asiento);
 		

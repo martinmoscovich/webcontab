@@ -218,14 +218,15 @@ public class SessionService {
 	 * @throws OrganizacionNoSeleccionadaException si no se selecciono una organizacion
 	 */
 	public void setEjercicio(Long ejId) throws EntityNotFoundException, OrganizacionNoSeleccionadaException {
+		User user = this.getUserOrThrow();
 		if (ejId != null) {
 			// Busca el ejercicio y comprueba que pertenezca a la organizacion
 			Ejercicio ej = ejDao.findById(ejId).orElseThrow(() -> new EntityNotFoundException(Ejercicio.class, ejId));
 			if(!ej.perteceneA(this.getOrganizacionOrThrow())) throw new EntityNotFoundException(Ejercicio.class, ejId);
 			
-			log.info("El {} entra en el {}", ej);
+			log.info("El {} entra en el {}", user, ej);
 		} else {
-			log.info("El {} sale del ejercicio");
+			log.info("El {} sale del ejercicio", user);
 		}
 		ctx.setEjercicioId(ejId);
 	}
