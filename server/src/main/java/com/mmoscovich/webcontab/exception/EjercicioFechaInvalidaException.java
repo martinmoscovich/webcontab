@@ -26,6 +26,6 @@ public class EjercicioFechaInvalidaException extends ConflictException {
 	}
 	
 	public static EjercicioFechaInvalidaException fechaConfirmada (Ejercicio ejercicio, LocalDate fecha) {
-		return new EjercicioFechaInvalidaException("La fecha debe ser posterior a la fecha confirmada del ejercicio (" + ejercicio.getFechaConfirmada().format(formatter) + ")");
+		return new EjercicioFechaInvalidaException("La fecha debe ser igual o posterior a la fecha confirmada del ejercicio (" + ejercicio.getFechaConfirmada().format(formatter) + ")");
 	}
 }

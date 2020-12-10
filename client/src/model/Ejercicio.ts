@@ -14,7 +14,7 @@ export interface Ejercicio extends IdModel {
 
   /**
    * Fecha hasta la cual estan confirmados los asientos.
-   * Ningun asiento se puede crear, modificar o eliminar hasta esta fecha inclusive.
+   * Ningun asiento se puede crear, modificar o eliminar anterior a esa fecha.
    * Es opcional. Si no existe, aun no se confirmo ningun asiento
    */
   fechaConfirmada?: Date;

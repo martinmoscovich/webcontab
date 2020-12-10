@@ -95,8 +95,8 @@ public class EjercicioResource {
 	 * Renumera los asientos de un ejercicio y establece o actualiza la fecha de confirmacion de asientos del ejercicio.
 	 * <p>Se renumeran <b>TODOS</b> los asientos del ejercicio.
 	 * <br>La fecha se utiliza para establecer hasta que fecha estan <b>confirmados</b> los asientos.
-	 * No se podran crear, modificar ni borrar asientos anteriores o que ocurran en esa fecha.
-	 * <br>El ejercicio queda <b>read only</b> hasta dicha fecha.
+	 * No se podran crear, modificar ni borrar asientos anteriores a esa fecha.
+	 * <br>El ejercicio queda <b>read only</b> hasta el dia anterior a esa fecha.
 	 * </p>
 	 * <p>
 	 * Se renumeran todos los asientos para evitar que algun asiento posterior a esta fecha genere conflicto con los confirmados.
@@ -105,7 +105,7 @@ public class EjercicioResource {
 	 * </p>
 	 * 
 	 * @param id id del ejercicio
-	 * @param fechaConfirmacion fecha hasta la cual estan confirmados los asientos (inclusive)
+	 * @param fechaConfirmacion fecha hasta la cual estan confirmados los asientos (se excluye dicha fecha)
 	 * @return el ejercicio actualizado con la nueva fecha de confirmacion
 	 * 
 	 * @throws EntityNotFoundException si no se encuentra el ejercicio
