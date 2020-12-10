@@ -41,7 +41,7 @@ public class Ejercicio extends PersistentEntity {
 	
 	/** 
 	 * Fecha hasta la cual estan <b>confirmados</b> los asientos <b>(inclusive)</b>.
-	 * <br>No se pueden crear ni modificar asientos hasta esa fecha.
+	 * <br>No se pueden crear ni modificar asientos anteriores a esa fecha .
 	 * Se ejecuta al renumerar y busca evitar que cambien los numeros de los asientos hasta 
 	 * esa fecha. 
 	 */
@@ -116,14 +116,14 @@ public class Ejercicio extends PersistentEntity {
 	
 	/**
 	 * Determina si la fecha esta habilitada dentro del ejercicio (para crear o modificar asientos).
-	 * Solo se pueden crear o modificar asientos posteriores a la fecha de confirmacion
+	 * Solo se pueden crear o modificar asientos desde la fecha de confirmacion
 	 */
 	private boolean esFechaHabilitada(LocalDate date) {
 		// Si no hay fecha confirmada, siempre estara habilitada
 		if(this.fechaConfirmada == null) return true;
 		
-		// Esta habilitada si es posterior a la fecha confirmada
-		return date.isAfter(this.fechaConfirmada);
+		// Esta habilitada si no es anterior a la fecha confirmada
+		return !date.isBefore(this.fechaConfirmada);
 	}
 	
 	@Override

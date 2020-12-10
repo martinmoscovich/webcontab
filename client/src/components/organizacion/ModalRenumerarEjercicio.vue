@@ -5,7 +5,7 @@
         <!-- Instrucciones -->
         <article class="mb-3">
           <p>Indique la fecha hasta la cual se confirman los asientos.</p>
-          <p><strong>No</strong> se podrán crear, modificar ni eliminar asientos anteriores a esa fecha (inclusive)</p>
+          <p><strong>No</strong> se podrán crear, modificar ni eliminar asientos anteriores a esa fecha</p>
           <p>Se renumerarán <strong>TODOS</strong> los asientos del ejercicio.</p>
         </article>
 
