@@ -17,7 +17,6 @@ import com.mmoscovich.webcontab.exception.mapper.WebContabExceptionMapper;
 import com.mmoscovich.webcontab.jaxrs.JacksonJaxRsProvider;
 import com.mmoscovich.webcontab.jaxrs.WebContabJaxRsBinder;
 import com.mmoscovich.webcontab.jaxrs.WebContabParamConverterProvider;
-import com.mmoscovich.webcontab.resources.CurrentUserResource;
 import com.mmoscovich.webcontab.resources.FirstTimeResource;
 import com.mmoscovich.webcontab.resources.ImportResource;
 import com.mmoscovich.webcontab.resources.InflacionResource;
@@ -25,8 +24,9 @@ import com.mmoscovich.webcontab.resources.MonedaResource;
 import com.mmoscovich.webcontab.resources.OrganizacionResource;
 import com.mmoscovich.webcontab.resources.ProvinciaResource;
 import com.mmoscovich.webcontab.resources.SessionResource;
+import com.mmoscovich.webcontab.resources.UserResource;
 import com.mmoscovich.webcontab.resources.admin.AdminResource;
-import com.mmoscovich.webcontab.resources.admin.UserResource;
+import com.mmoscovich.webcontab.resources.admin.AdminUserResource;
 import com.mmoscovich.webcontab.resources.ejercicio.AsientoResource;
 import com.mmoscovich.webcontab.resources.ejercicio.InformeResource;
 import com.mmoscovich.webcontab.resources.organizacion.CategoriaResource;
@@ -60,8 +60,8 @@ public class RestConfig extends ResourceConfig {
         register(ImportResource.class);
         register(SessionResource.class);
         register(AdminResource.class);
+        register(AdminUserResource.class);
         register(UserResource.class);
-        register(CurrentUserResource.class);
         register(FirstTimeResource.class);
         register(InflacionResource.class);
         
@@ -69,7 +69,7 @@ public class RestConfig extends ResourceConfig {
         register(WebContabParamConverterProvider.class);
         register(JacksonJaxRsProvider.class);
         register(new WebContabJaxRsBinder(session));
-    
+    	
         // Exception Mappers
         register(WebContabExceptionMapper.class);
         

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,8 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.validator.constraints.Length;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mmoscovich.webcontab.exception.EjercicioFechaInvalidaException;
 import com.mmoscovich.webcontab.exception.InvalidRequestException;
 import com.mmoscovich.webcontab.util.ValidationUtils;
@@ -153,5 +156,33 @@ public class Asiento extends PersistentEntity {
 			saldos.compute(monedaId, (k,v) -> (v == null) ? importe : v.add(importe));
 		}
 		return saldos;
+	}
+	
+	/*********************************************
+	 * Se incluyen para que no los ignore Jackson
+	 *********************************************/
+	
+	@Override
+	@JsonProperty
+	public Date getCreationDate() {
+		return super.getCreationDate();
+	}
+	
+	@Override
+	@JsonProperty
+	public User getCreationUser() {
+		return super.getCreationUser();
+	}
+	
+	@Override
+	@JsonProperty
+	public Date getUpdateDate() {
+		return super.getUpdateDate();
+	}
+	
+	@Override
+	@JsonProperty
+	public User getUpdateUser() {
+		return super.getUpdateUser();
 	}
 }

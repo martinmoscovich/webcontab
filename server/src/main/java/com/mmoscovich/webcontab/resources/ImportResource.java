@@ -91,7 +91,7 @@ public class ImportResource {
 			boolean puedeImportarOtrasOrganizaciones = session.isAdmin();
 			if(!puedeImportarOtrasOrganizaciones) throw new AuthorizationException("El usuario actual solo puede importar ejercicios y cuentas ingresando a la organizacion deseada");
 		}
-		return importer.create(file.toPath(), fileInfo.getFileName(), org);
+		return importer.create(file.toPath(), fileInfo.getFileName(), session.getUserOrThrow(), org);
 	}
 	
 	/**

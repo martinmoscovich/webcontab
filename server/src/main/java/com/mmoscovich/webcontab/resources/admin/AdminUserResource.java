@@ -33,7 +33,7 @@ import com.mmoscovich.webcontab.services.UserService;
 @Path("/admin/users")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public class UserResource {
+public class AdminUserResource {
 
 	@Inject
 	private UserService service;

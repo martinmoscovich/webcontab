@@ -35,9 +35,7 @@
         </small>
       </b-table-column>
 
-      <b-table-column field="cuentaCodigo" label="Cuenta"> </b-table-column>
-
-      <b-table-column field="cuentaDescripcion" label=""> </b-table-column>
+      <b-table-column field="cuentaCodigo" label="Cuenta"><AuditableLabel :model="props.row" /> </b-table-column>
 
       <b-table-column field="detalle" label="Detalle">
         {{ props.row.detalle }}
@@ -59,12 +57,10 @@
         <td></td>
         <td></td>
         <td></td>
-        <td>
-          <small>
+        <td class="is-flex">
+          <small style="width: 120px;">
             <router-link :to="getCuentaRoute(item.cuenta)">{{ item.cuenta.codigo }}</router-link>
           </small>
-        </td>
-        <td>
           <small>
             <router-link :to="getCuentaRoute(item.cuenta)">{{ item.cuenta.descripcion }}</router-link>
           </small>

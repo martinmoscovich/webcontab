@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mmoscovich.webcontab.model.Ejercicio;
 import com.mmoscovich.webcontab.model.Organizacion;
+import com.mmoscovich.webcontab.model.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -51,6 +52,9 @@ public class ImportTask {
 	
 	/** Estadisticas de la importacion */
 	private ImportTaskSummary summary;
+	
+	/** Usuario que pidio la importacion, se usa para el usuario de creacion */
+	private User user;
 	
 	public ImportTask(UUID uuid, Path file, Organizacion org, Ejercicio ej) {
 		this.uuid = uuid;

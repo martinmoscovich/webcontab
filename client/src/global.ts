@@ -25,6 +25,7 @@ import UsuarioSearch from '@/components/admin/UsuarioSearch.vue';
 import MonedaSelect from '@/components/common/MonedaSelect.vue';
 import PeriodoInput from '@/components/common/PeriodoInput.vue';
 import MediaObject from '@/components/common/MediaObject.vue';
+import AuditableLabel from '@/components/common/AuditableLabel.vue';
 
 // Se registran los plugins
 Vue.use(SimpleVueValidation);
@@ -54,3 +55,4 @@ Vue.component('UsuarioSearch', UsuarioSearch);
 Vue.component('MonedaSelect', MonedaSelect);
 Vue.component('PeriodoInput', PeriodoInput);
 Vue.component('MediaObject', MediaObject);
+Vue.component('AuditableLabel', AuditableLabel);

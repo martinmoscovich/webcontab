@@ -154,6 +154,15 @@ export function formatDateForServer(date?: Date) {
 }
 
 /**
+ * Determina si la fecha 1 es igual a la 2
+ * @param date1
+ * @param date2
+ */
+export function isEqualDate(date1?: Date | null, date2?: Date | null): boolean {
+  return date1?.getTime() == date2?.getTime();
+}
+
+/**
  * Determina si la fecha 1 es anterior a la 2
  * @param date1
  * @param date2

@@ -64,7 +64,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			.antMatchers(HttpMethod.GET, "/api/session").permitAll()
 			
 			// Cualquier otra interaccion con la sesion o el perfil de usuario ya tiene que estar logueado
-			.antMatchers("/api/session/**", "/api/user").authenticated()
+			.antMatchers("/api/session/**", "/api/users/me").authenticated()
 			
 			// Cualquier llamada a admin
 			.antMatchers("/api/admin/**").hasRole("ADMIN")

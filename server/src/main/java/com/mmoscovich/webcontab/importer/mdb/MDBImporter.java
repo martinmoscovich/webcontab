@@ -45,6 +45,7 @@ import com.mmoscovich.webcontab.model.Ejercicio;
 import com.mmoscovich.webcontab.model.Imputacion;
 import com.mmoscovich.webcontab.model.Moneda;
 import com.mmoscovich.webcontab.model.Organizacion;
+import com.mmoscovich.webcontab.model.User;
 import com.mmoscovich.webcontab.services.AsientoService;
 import com.mmoscovich.webcontab.services.CategoriaService;
 import com.mmoscovich.webcontab.services.CuentaService;
@@ -102,10 +103,10 @@ public class MDBImporter implements Importer {
 			if(importedEjercicio == null) throw new InvalidRequestException("La base cargada no posee ejercicio");
 			
 			// Se crea u obtiene la organizacion en base de su CUIT y Nombre
-			Organizacion org = this.validarYCrearOrg(importedEjercicio.cuit, importedEjercicio.razonSocial, false);
+			Organizacion org = this.validarYCrearOrg(importedEjercicio.cuit, importedEjercicio.razonSocial, null, false);
 			
 			// Se crea u obtiene el ejercicio
-			Ejercicio ejercicio = this.validarYCrearEjercicio(org, importedEjercicio.inicio, importedEjercicio.finalizacion, false);
+			Ejercicio ejercicio = this.validarYCrearEjercicio(org, importedEjercicio.inicio, importedEjercicio.finalizacion, null, false);
 			
 			// Se genera un ID para la tarea
 			UUID uuid = UUID.randomUUID();
@@ -139,7 +140,7 @@ public class MDBImporter implements Importer {
 	 * @return
 	 * @throws InvalidRequestException
 	 */
-	private Organizacion validarYCrearOrg(String cuit, String nombre, boolean persist) throws InvalidRequestException {
+	private Organizacion validarYCrearOrg(String cuit, String nombre, User creationUser, boolean persist) throws InvalidRequestException {
 		// ORGANIZACION
 		// Debe existir una con ese CUIT y ningun otra debe tener el mismo nombre
 		List<Organizacion> orgs = orgDao.findByCuitOrNombre(cuit, nombre);
@@ -147,6 +148,8 @@ public class MDBImporter implements Importer {
 		if(orgs.isEmpty()) {
 			// No existe, se crea
 			Organizacion org  = new Organizacion(cuit, nombre);
+			org.setCreationUser(creationUser);
+			org.setUpdateUser(creationUser);
 			return persist ? orgDao.save(org) : org;
 			
 		} else if(orgs.size() == 1 && orgs.get(0).getCuit().equals(cuit)) {
@@ -172,7 +175,7 @@ public class MDBImporter implements Importer {
 	 * @param persist indica si al crear se debe persistir o solo devolver
 	 * @return
 	 */
-	private Ejercicio validarYCrearEjercicio(Organizacion org, LocalDate inicio, LocalDate finalizacion, boolean persist) {
+	private Ejercicio validarYCrearEjercicio(Organizacion org, LocalDate inicio, LocalDate finalizacion, User creationUser, boolean persist) {
 		if(inicio == null) throw new InvalidRequestException("El ejercicio de la base cargada no tiene fecha de inicio");
 		if(finalizacion == null) throw new InvalidRequestException("El ejercicio de la base cargada no tiene fecha de fin");
 
@@ -200,6 +203,8 @@ public class MDBImporter implements Importer {
 		}
 		
 		Ejercicio ej = new Ejercicio(org, inicio, finalizacion);
+		ej.setCreationUser(creationUser);
+		ej.setUpdateUser(creationUser);
 		return persist ? ejDao.save(ej) : ej;
 	}
 	
@@ -224,7 +229,7 @@ public class MDBImporter implements Importer {
 			if(task.getOrganizacion().getId() == null) summary.addEjercicio();
 			
 			// Se crea (y persiste) la organizacion, o se obtiene si ya existia
-			Organizacion org = this.getOrCreate(task.getOrganizacion());
+			Organizacion org = this.getOrCreateOrganizacion(task.getOrganizacion(), task.getUser());
 			
 			List<ImportedCuenta> importedCuentas;
 			List<ImportedAsiento> importedAsientos = null;
@@ -277,6 +282,10 @@ public class MDBImporter implements Importer {
 						item.setCategoria((Categoria)cat);
 					}
 					
+					// Usuario de creacion de la categoria o cuenta
+					item.setCreationUser(task.getUser());
+					item.setUpdateUser(task.getUser());
+					
 					// Se busca o crea la cuenta o categoria
 					if(item instanceof Categoria) {
 						summary.addCategoria();
@@ -295,7 +304,7 @@ public class MDBImporter implements Importer {
 			if(includeAsientos) {
 				// Se crea (y persiste) el ejercicio o se obtiene el existente
 				if(task.getEjercicio().getId() == null) summary.addEjercicio();
-				Ejercicio ejercicio = this.validarYCrearEjercicio(org, task.getEjercicio().getInicio(), task.getEjercicio().getFinalizacion(), true);
+				Ejercicio ejercicio = this.validarYCrearEjercicio(org, task.getEjercicio().getInicio(), task.getEjercicio().getFinalizacion(), task.getUser(), true);
 				
 				// Se crean las instancias de asiento con sus imputaciones
 				List<Asiento> asientos = this.convertAsientos(ejercicio, codigoToCuenta, importedAsientos, importedMovimientos);
@@ -341,14 +350,14 @@ public class MDBImporter implements Importer {
 	 * @param org 
 	 * @return la organizacion persistida
 	 */
-	private Organizacion getOrCreate(Organizacion org) {
+	private Organizacion getOrCreateOrganizacion(Organizacion org, User creationUser) {
 		Long id = org.getId();
 		if(org.getId() != null) {
 			// Si tiene ID (no es nueva, se busca)
 			return orgDao.findById(id).orElseThrow(() -> new EntityNotFoundException(Organizacion.class, id));
 		} else {
 			// Es nueva, se crea (se usa este metodo para volver a chequear que siga siendo valida
-			return this.validarYCrearOrg(org.getCuit(), org.getNombre(), true);
+			return this.validarYCrearOrg(org.getCuit(), org.getNombre(), creationUser, true);
 		}
 	}
 	
@@ -409,6 +418,11 @@ public class MDBImporter implements Importer {
 		// Por cada asiento
 		for(ImportedAsiento item : asientos) {
 			Asiento asiento = new Asiento(ejercicio, item.numero, item.fecha, item.detalle, null);
+			
+			// Usuario que crea el asiento
+			asiento.setCreationUser(ejercicio.getCreationUser());
+			asiento.setUpdateUser(ejercicio.getCreationUser());
+			
 			result.add(asiento);
 			try {
 			// Crea el asiento

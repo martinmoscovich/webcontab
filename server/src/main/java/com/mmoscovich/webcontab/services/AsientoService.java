@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -70,6 +71,9 @@ public class AsientoService {
 	
 	@Inject
 	private EjercicioService ejercicioService;
+	
+	@Inject
+	private SessionService session;
 
 	/**
 	 * Devuelve una pagina de asientos del ejercicio especificado, dentro del periodo indicado.
@@ -699,6 +703,13 @@ public class AsientoService {
 			// Es una modificacion. Se deben guardar primero las imputaciones, para que no haga refresh de la lista de imputaciones y
 			// pierda los datos nuevos
 			imputacionService.persistir(asiento.getImputaciones());
+			
+			// Datos de auditoria del asiento
+			// Si se modifica el asiento se persisten automaticamente
+			// Pero si se modifican las imputaciones no, por eso se actualizan a mano.
+			asiento.setUpdateDate(new Date());
+			session.getUser().ifPresent(asiento::setUpdateUser);
+			
 			asiento = asientoDao.save(asiento);
 		}
 		return asiento;

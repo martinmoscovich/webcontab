@@ -4,14 +4,13 @@ import { Ejercicio } from '@/model/Ejercicio';
 import { User } from '@/model/User';
 import { notificationService, routerService } from '@/service';
 import { Action, Module, Mutation, VuexModule } from 'vuex-class-modules';
-import { organizacionStore, initAuthenticated } from '@/store';
+import { organizacionStore, initAuthenticated, userStore } from '@/store';
 import { Organizacion } from '@/model/Organizacion';
 import { Session } from '@/model/Session';
 import { logError } from '@/utils/log';
 import { isDefined } from '@/utils/general';
 import { Rol } from '@/model/admin/Member';
 import { resetStore } from '@/store';
-import { isEqualOrAfter } from '@/utils/date';
 import { Timer } from '@/core/Timer';
 
 /** Intervalo de Ping en ms */
@@ -405,7 +404,7 @@ export class SessionStore extends VuexModule {
   }
 
   /**
-   * Actualiza los datos del usuario en la sesion.
+   * Actualiza los datos del usuario en la sesion y en la cache.
    * Esto se utiliza cuando se cambian los datos del usuario logueado, para que se vean reflejados
    * @param user nuevos datos del usuario
    */
@@ -420,6 +419,9 @@ export class SessionStore extends VuexModule {
       ejercicio: this.ejercicio,
       roles: this.sesion.roles
     });
+
+    // Actualiza el usuario en la cache de usuarios
+    userStore.agregarUsuarioEnCache(user);
   }
 
   @Mutation
@@ -463,6 +465,9 @@ export class SessionStore extends VuexModule {
       if (ejercicio != null) {
         organizacionStore.agregarAStore(ejercicio);
       }
+
+      // Agrega el usuario en la cache de usuarios
+      userStore.agregarUsuarioEnCache(user);
 
       // TODO Mejorar esto (quizas no deberia llegar la org en el ejercicico)
       if (this.ejercicio?.organizacion) {

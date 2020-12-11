@@ -1,11 +1,12 @@
 import { ImputacionDTO, mapImputacionFromServer, UpstreamImputacionDTO } from './ImputacionDTO';
 import { parseServerDate } from '@/utils/date';
 import { IdModel } from '@/model/IdModel';
+import { Auditable, mapAuditableFromServer } from '@/model/Auditable';
 
 /**
  * Asiento
  */
-export interface AsientoDTO extends IdModel {
+export interface AsientoDTO extends IdModel, Auditable {
   /** Numero de asiento */
   numero: number;
 
@@ -39,6 +40,7 @@ export interface UpstreamAsientoDTO extends Omit<AsientoDTO, 'id' | 'numero' | '
 export function mapAsientoFromServer(json: any): AsientoDTO {
   return {
     ...json,
+    ...mapAuditableFromServer(json),
     fecha: parseServerDate(json.fecha),
     imputaciones: json.imputaciones?.map(mapImputacionFromServer) ?? []
   };

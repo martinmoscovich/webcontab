@@ -144,7 +144,11 @@ export default class TablaImputaciones extends Vue {
           numero: -1,
           detalle: '',
           imputaciones: [],
-          fecha: this.page?.items?.[0].asiento.fecha
+          fecha: this.page?.items?.[0].asiento.fecha,
+          creationUser: null,
+          creationDate: null,
+          updateUser: null,
+          updateDate: null
         },
         detalle: 'Saldo Anterior',
         importe: 0,

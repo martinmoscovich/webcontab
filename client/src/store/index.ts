@@ -8,6 +8,7 @@ import { SimpleStore } from './SimpleStore';
 import { UIStore } from './UIStore';
 import { OrganizacionStore } from '@/store/OrganizacionStore';
 import { UpdateStore } from '@/store/UpdateStore';
+import { UserStore } from '@/store/UserStore';
 
 Vue.use(Vuex);
 
@@ -32,10 +33,8 @@ export const monedaStore = new SimpleStore(
   { api: monedaApi, entidad: 'moneda', entidades: 'monedas' },
   { store, name: 'moneda' }
 );
-export const organizacionStore = new OrganizacionStore({
-  store,
-  name: 'organizacion'
-});
+export const organizacionStore = new OrganizacionStore({ store, name: 'organizacion' });
+export const userStore = new UserStore({ store, name: 'usuario' });
 
 /**
  * Inicializa el store

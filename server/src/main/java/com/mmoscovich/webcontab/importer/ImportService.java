@@ -16,6 +16,7 @@ import com.mmoscovich.webcontab.exception.EntityNotFoundException;
 import com.mmoscovich.webcontab.importer.mdb.MDBImporter;
 import com.mmoscovich.webcontab.importer.mdb.MDBImporter.CuentaImportStrategy;
 import com.mmoscovich.webcontab.model.Organizacion;
+import com.mmoscovich.webcontab.model.User;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,15 +60,19 @@ public class ImportService {
 	 * 
 	 * @param file Path al archivo MDB
 	 * @param fileName nombre original del archivo
+	 * @param user usuario que pide la importacion
 	 * @param orgPermitida si se especifica, la organizacion del MDB debe ser la misma.
 	 * @return la tarea de importacion creada
 	 * @throws IOException
 	 */
-	public ImportTask create(Path file, String fileName, Organizacion orgPermitida) throws IOException {
+	public ImportTask create(Path file, String fileName, User user, Organizacion orgPermitida) throws IOException {
 		log.info("Analizando el archivo {} y creando la tarea de importacion", fileName);
 		
 		// Delega la creacion de la tarea al Importer, que es quien puede leer el archivo
 		ImportTask task = importer.read(file, fileName);
+		
+		// Se guarda el usuario que pide la importacion
+		task.setUser(user);
 		
 		// Si se especifico una organizacion, la del archivo debe ser la misma
 		if(orgPermitida != null && !orgPermitida.getId().equals(task.getOrganizacion().getId())) {

@@ -8,6 +8,7 @@ import { UpstreamImputacionDTO } from './ImputacionDTO';
 import { formatDate, isAfter, isBefore } from '@/utils/date';
 import { Dictionary } from 'vue-router/types/router';
 import { FormValidation } from '@/model/FormValidation';
+import { User } from '@/model/User';
 
 /**
  * Modelo de asiento que se utiliza en los componentes.
@@ -21,6 +22,10 @@ export class AsientoModel extends Vue implements Nullable<Omit<AsientoDTO, 'impu
   fecha: Date | null = null;
   detalle: string | null = null;
   imputaciones: ImputacionModel[] = [];
+  creationUser: User | null = null;
+  updateUser: User | null = null;
+  creationDate: Date | null = null;
+  updateDate: Date | null = null;
 
   /**
    * Setea el id del asiento.
@@ -39,6 +44,7 @@ export class AsientoModel extends Vue implements Nullable<Omit<AsientoDTO, 'impu
       this.numero = this.asiento.numero ?? null;
       this.fecha = this.asiento.fecha ?? null;
       this.detalle = this.asiento.detalle ?? null;
+
       this.imputaciones = this.asiento.imputaciones
         ? this.asiento.imputaciones.map(i => {
             const imp = new ImputacionModel();
@@ -46,12 +52,24 @@ export class AsientoModel extends Vue implements Nullable<Omit<AsientoDTO, 'impu
             return imp;
           })
         : [];
+
+      // Auditoria
+      this.creationUser = this.asiento.creationUser ?? null;
+      this.creationDate = this.asiento.creationDate ?? null;
+      this.updateUser = this.asiento.updateUser ?? null;
+      this.updateDate = this.asiento.updateDate ?? null;
     } else {
       // Nuevo, todo null y una imputacion vacia
       this.numero = null;
       this.fecha = null;
       this.detalle = null;
       this.imputaciones = [new ImputacionModel()];
+
+      // Auditoria
+      this.creationUser = null;
+      this.creationDate = null;
+      this.updateUser = null;
+      this.updateDate = null;
     }
   }
 
@@ -145,18 +163,13 @@ export class AsientoModel extends Vue implements Nullable<Omit<AsientoDTO, 'impu
       fecha: this.fecha!,
       detalle: this.detalle ?? '',
       // Valida y convierte las imputaciones
-      imputaciones: this.imputaciones.map(i => i.toDTO(validate)).filter(i => !!i) as UpstreamImputacionDTO[]
+      imputaciones: this.imputaciones.map(i => i.toDTO(validate)).filter(i => !!i) as UpstreamImputacionDTO[],
+
+      // No envia los datos de auditoria, esos se manejan en el server
+      creationDate: null,
+      updateDate: null,
+      creationUser: null,
+      updateUser: null
     };
   }
-
-  // fromDTO(dto: AsientoDTO) {
-  //   this.id = dto.id;
-  //   this.fecha = dto.fecha;
-  //   this.detalle = dto.detalle;
-  //   this.imputaciones = dto.imputaciones.map(idto => {
-  //     const imp = new ImputacionModel();
-  //     imp.fromDTO(idto);
-  //     return imp;
-  //   });
-  // }
 }

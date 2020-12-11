@@ -25,7 +25,15 @@ export class UserApi {
    * @param user datos modificados
    */
   updateCurrent(user: UserWithPassword): Promise<User> {
-    return this.http.put('/user', user).then(toEntity());
+    return this.http.put('/users/me', user).then(toEntity());
+  }
+
+  /**
+   * Obtiene el usuario a partir del id
+   * @param id
+   */
+  getById(id: number): Promise<User> {
+    return this.http.get('/users/' + id).then(toEntity());
   }
 
   /****************************************************
