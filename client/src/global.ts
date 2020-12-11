@@ -20,6 +20,7 @@ import PageNavBar from '@/components/layout/navbar/PageNavBar.vue';
 import ToolbarExcelButton from '@/components/layout/navbar/ToolbarExcelButton.vue';
 
 import Field from '@/components/common/Field';
+import DatePicker from '@/components/common/DatePicker';
 import CuentaSearch from '@/components/cuentas/CuentaSearch.vue';
 import UsuarioSearch from '@/components/admin/UsuarioSearch.vue';
 import MonedaSelect from '@/components/common/MonedaSelect.vue';
@@ -50,6 +51,7 @@ Vue.component('PageNavBar', PageNavBar);
 Vue.component('ToolbarExcelButton', ToolbarExcelButton);
 
 Vue.component('Field', Field);
+Vue.component('DatePicker', DatePicker);
 Vue.component('CuentaSearch', CuentaSearch);
 Vue.component('UsuarioSearch', UsuarioSearch);
 Vue.component('MonedaSelect', MonedaSelect);

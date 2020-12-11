@@ -3,7 +3,7 @@
     <b-field grouped class="fields mb-0">
       <!-- Fecha -->
       <Field label="Fecha" label-position="on-border" :v="validation.allErrors('asiento.fecha')">
-        <b-datepicker
+        <DatePicker
           ref="inputFecha"
           v-model="asiento.fecha"
           @input="onInput"
@@ -17,7 +17,7 @@
           :min-date="minDate"
           :max-date="maxDate"
         >
-        </b-datepicker>
+        </DatePicker>
       </Field>
 
       <!-- Detalle -->

@@ -2,7 +2,7 @@
   <b-field style="justify-content: center;">
     <!-- DESDE -->
     <b-field label="Desde" label-position="on-border">
-      <b-datepicker
+      <DatePicker
         placeholder="Seleccione..."
         :type="month ? 'month' : undefined"
         :value="value.desde"
@@ -11,12 +11,12 @@
         :focused-date="value.desde || value.hasta || realFocusedDate"
         @input="onDesdeInput"
       >
-      </b-datepicker>
+      </DatePicker>
     </b-field>
 
     <!-- HASTA -->
     <b-field label="Hasta" label-position="on-border" class="ml-2">
-      <b-datepicker
+      <DatePicker
         placeholder="Seleccione..."
         :type="month ? 'month' : undefined"
         :value="value.hasta"
@@ -25,7 +25,7 @@
         :focused-date="value.hasta || value.desde || realFocusedDate"
         @input="onHastaInput"
       >
-      </b-datepicker>
+      </DatePicker>
     </b-field>
   </b-field>
 </template>

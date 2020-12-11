@@ -7,8 +7,7 @@
     <template v-if="dateMode">
       <!-- Fecha Desde -->
       <b-field label="Desde" label-position="on-border">
-        <b-datepicker
-          placeholder="Seleccione..."
+        <DatePicker
           v-model="filter.desde"
           :min-date="minDate"
           :max-date="maxDate"
@@ -18,13 +17,12 @@
             <b-icon icon="close"></b-icon>
             <span>Limpiar</span>
           </button>
-        </b-datepicker>
+        </DatePicker>
       </b-field>
 
       <!-- Fecha Hasta -->
       <b-field label="Hasta" label-position="on-border">
-        <b-datepicker
-          placeholder="Seleccione..."
+        <DatePicker
           v-model="filter.hasta"
           :min-date="minDate"
           :max-date="maxDate"
@@ -34,7 +32,7 @@
             <b-icon icon="close"></b-icon>
             <span>Limpiar</span>
           </button>
-        </b-datepicker>
+        </DatePicker>
       </b-field>
     </template>
 

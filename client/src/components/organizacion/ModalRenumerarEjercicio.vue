@@ -11,7 +11,7 @@
 
         <!-- Input Fecha -->
         <Field hideErrorMessage label-position="on-border">
-          <b-datepicker
+          <DatePicker
             inline
             class="has-text-centered"
             :value="actualValue"

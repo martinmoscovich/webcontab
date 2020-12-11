@@ -1,6 +1,6 @@
 import { isNullOrUndefined } from '@/utils/general';
 
-const MONTHS = [
+export const MONTHS = [
   'Enero',
   'Febrero',
   'Marzo',

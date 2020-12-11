@@ -2,8 +2,9 @@
   <b-field grouped>
     <!-- Input Desde -->
     <b-field label="Desde" label-position="on-border">
-      <b-datepicker
+      <DatePicker
         placeholder="Seleccione..."
+        locale="es"
         v-model="filter.desde"
         :min-date="minDate"
         :max-date="maxDate"
@@ -13,12 +14,12 @@
           <b-icon icon="close"></b-icon>
           <span>Limpiar</span>
         </button>
-      </b-datepicker>
+      </DatePicker>
     </b-field>
 
     <!-- Input Hasta -->
     <b-field label="Hasta" label-position="on-border">
-      <b-datepicker
+      <DatePicker
         placeholder="Seleccione..."
         v-model="filter.hasta"
         :min-date="minDate"
@@ -29,7 +30,7 @@
           <b-icon icon="close"></b-icon>
           <span>Limpiar</span>
         </button>
-      </b-datepicker>
+      </DatePicker>
     </b-field>
 
     <!-- Input Categoria -->
