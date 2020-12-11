@@ -3,3 +3,4 @@
 /static/
 /logs/
 application-*.yml
+thin.properties
