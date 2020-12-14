@@ -463,6 +463,9 @@ public class AsientoService {
 			asiento.agregarImputacion(new Imputacion(cuentaDao.getOne(b.getId()), b.getSaldo().negate(), "Cierre de Libros"));
 		});
 		
+		// Si el asiento esta vacio, el plan de cuentas esta mal configurado
+		if(asiento.getImputaciones().isEmpty()) throw new InvalidRequestException("El asiento de cierre no puede estar vacio, compruebe la configuracion");
+		
 		Asiento cierre = this.persistir(asiento);
 		log.info("Se creo el asiento de Cierre de ejercicio con numero {} con {} imputaciones en el {}", cierre.getNumero(), cierre.getImputaciones().size(), ejercicio);
 		
