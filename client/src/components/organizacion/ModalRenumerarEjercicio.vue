@@ -64,10 +64,7 @@ export default class ModalRenumerarEjercicio extends Vue {
    * Se usa la confirmada si existe y si no la de inicio del ejercicio
    */
   private get minDate() {
-    // Fecha confirmada + 1 dia
-    if (this.ejercicio?.fechaConfirmada) return addDays(this.ejercicio.fechaConfirmada, 1);
-
-    return this.ejercicio?.inicio;
+    return this.ejercicio?.fechaConfirmada ?? this.ejercicio?.inicio;
   }
 
   /** Fecha maxima posible (la de finalizacion del ejercicio) */
