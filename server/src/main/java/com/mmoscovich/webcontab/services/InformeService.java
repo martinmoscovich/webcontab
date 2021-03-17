@@ -188,16 +188,18 @@ public class InformeService {
 		}
 		
 		Long firstId = null;
+		Short numeroAsiento = null;
 		// Si hay items en la pagina, se obtiene el saldo anterior al primer item de la misma
 		// Si no hay items en la pagina, se obtiene el saldo hasta la fecha final pedida
 		if(!page.getContent().isEmpty()) {
 			Imputacion i = page.getContent().get(0);
 			firstId = i.getId();
+			numeroAsiento = i.getAsiento().getNumero();
 			hasta = i.getAsiento().getFecha();
 		}
 		
 		// Se busca el saldo anterior de la cuenta
-		Map<Long, BigDecimal> result = dao.getMayorSaldoAnterior(ejercicio, Set.of(cuenta.getId()), hasta, firstId);
+		Map<Long, BigDecimal> result = dao.getMayorSaldoAnterior(ejercicio, Set.of(cuenta.getId()), hasta, numeroAsiento, firstId);
 		
 		// Como la query anterior esta pensada para multiples cuentas pero se envio una, se pide solo la primera entry.
 		return result.isEmpty() ? BigDecimal.ZERO : IterableUtils.get(result.values(), 0);
@@ -220,7 +222,7 @@ public class InformeService {
     	// Si se estan filtrando imputaciones, se busca el saldo anterior para cada cuenta
     	Map<Long, BigDecimal> saldosAnteriores = null;
     	if(filter.esFiltroFechas() && filter.getDesde() != null) {
-    		saldosAnteriores = dao.getMayorSaldoAnterior(ejercicio, cuentasIds, filter.getDesde(), null);
+    		saldosAnteriores = dao.getMayorSaldoAnterior(ejercicio, cuentasIds, filter.getDesde(), null, null);
     	}
     	
     	// Se genera el reporte

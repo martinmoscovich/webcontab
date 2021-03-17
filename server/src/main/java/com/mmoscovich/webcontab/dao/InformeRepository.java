@@ -168,7 +168,7 @@ public class InformeRepository {
 			"WHERE " +
 			"a.ejercicio = :ejercicio AND " +
 			"i.cuenta.id in :cuentasIds AND " +
-			"(a.fecha < :hasta OR (a.fecha = :hasta AND i.id < :firstId))";
+			"(a.fecha < :hasta OR (a.fecha = :hasta AND a.numero < :numeroAsiento) OR (a.fecha = :hasta AND a.numero = :numeroAsiento AND i.id < :firstId))";
 	
 	/**
 	 * Obtiene los saldos anteriores a las imputaciones que se mostraran en el mayor. Uno por cada cuenta.
@@ -184,7 +184,7 @@ public class InformeRepository {
 	 */
 	@SuppressWarnings("unchecked")
 	@Transactional(readOnly = true)
-	public Map<Long, BigDecimal> getMayorSaldoAnterior(Ejercicio ejercicio, Set<Long> cuentasIds, LocalDate hasta, Long firstId) {
+	public Map<Long, BigDecimal> getMayorSaldoAnterior(Ejercicio ejercicio, Set<Long> cuentasIds, LocalDate hasta, Short numeroAsiento, Long firstId) {
 		
 		String query = MAYOR_SALDO_ANTERIOR_QUERY + " GROUP BY i.cuenta";;
 		
@@ -192,6 +192,7 @@ public class InformeRepository {
 			.setParameter("ejercicio", ejercicio)
 			.setParameter("cuentasIds", cuentasIds)
 			.setParameter("hasta", hasta)
+			.setParameter("numeroAsiento", numeroAsiento == null ? 0 : numeroAsiento)
 			.setParameter("firstId", firstId == null ? 0 : firstId)
 			.getResultList();
 		
