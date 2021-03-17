@@ -19,6 +19,8 @@
         <!-- Paginacion en la parte superior -->
         <b-pagination
           v-if="asientos.number > 1 || asientos.next"
+          :class="{ mobile: isMobile }"
+          :simple="isMobile"
           :total="asientos.total"
           :current="asientos.number"
           :per-page="PAGE_SIZE"
@@ -29,21 +31,33 @@
 
     <!-- Tabla de Asientos -->
     <div class="card">
-      <TablaAsientos :page="asientos" :loading="loading" :pageSize="PAGE_SIZE" @request="onPageRequest" />
+      <ListaAsientosMobile v-if="isMobile" :page="asientos" :loading="loading" />
+      <TablaAsientos v-else :page="asientos" :loading="loading" :pageSize="PAGE_SIZE" @request="onPageRequest" />
     </div>
+    <!-- Paginacion en la parte inferior para mobile -->
+    <b-pagination
+      v-if="isMobile && (asientos.number > 1 || asientos.next)"
+      class="mobile"
+      simple
+      :total="asientos.total"
+      :current="asientos.number"
+      :per-page="PAGE_SIZE"
+      @change="onPageRequest"
+    />
   </section>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator';
 import TablaAsientos from '@/components/asientos/TablaAsientos.vue';
+import ListaAsientosMobile from '@/components/asientos/ListaAsientosMobile.vue';
 import FiltroAsientos from '@/components/asientos/FiltroAsientos.vue';
 import { asientoApi, informeApi } from '@/api';
 import { AsientoDTO } from '@/model/AsientoDTO';
 import Page, { emptyPage } from '@/core/Page';
 import { parseServerDate } from '@/utils/date';
 import { AsientosSearchFilter, AsientosSearchOptions } from '@/api/AsientoApi';
-import { sessionStore } from '@/store';
+import { sessionStore, uiStore } from '@/store';
 import { routerService } from '@/service';
 import { toInt } from '@/utils/general';
 import { toQuerystringDictionary } from '@/core/ajax/helpers';
@@ -52,7 +66,7 @@ import { toQuerystringDictionary } from '@/core/ajax/helpers';
  * Pagina de informe de diario (asientos con sus imputaciones)
  */
 @Component({
-  components: { TablaAsientos, FiltroAsientos }
+  components: { TablaAsientos, FiltroAsientos, ListaAsientosMobile }
 })
 export default class InformeDiarioView extends Vue {
   /** Indica que se esta cargando la pagina de asientos */
@@ -70,6 +84,11 @@ export default class InformeDiarioView extends Vue {
 
   private mounted() {
     this.search();
+  }
+
+  /** Indica si es ancho mobile */
+  private get isMobile() {
+    return uiStore.isMobile;
   }
 
   private get ejercicio() {

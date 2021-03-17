@@ -1,5 +1,5 @@
 <template>
-  <b-field grouped>
+  <b-field>
     <!-- Switch entre modo "Fechas" y modo "Numeros" -->
     <b-checkbox v-model="dateMode" />
 
@@ -159,10 +159,10 @@ export default class FiltroAsientos extends Vue {
 
 <style lang="scss" scoped>
 .field {
-  &.is-grouped {
-    align-items: center;
-    margin: 5px 0;
+  align-items: center;
+  margin: 5px 0;
+  .field:not(:last-child) {
+    margin-right: 0.75rem;
   }
-  margin-bottom: 0;
 }
 </style>

@@ -159,6 +159,11 @@ body,
   border-right: none;
 }
 
+// Oculta los numeros en el paginador en mobile
+.pagination.mobile .info {
+  display: none;
+}
+
 .pl-0 {
   padding-left: 0 !important;
 }

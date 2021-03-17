@@ -49,13 +49,7 @@
 
     <!-- Tabla de balance -->
     <div class="card">
-      <ListaBalanceMobile
-        v-if="isMobile"
-        :page="items"
-        :loading="loading"
-        :pageSize="PAGE_SIZE"
-        @selected="onCuentaSelected"
-      />
+      <ListaBalanceMobile v-if="isMobile" :page="items" :loading="loading" @selected="onCuentaSelected" />
       <TablaBalanceCuentas
         v-else
         :page="items"
@@ -278,9 +272,3 @@ export default class InformeBalanceView extends Vue {
   }
 }
 </script>
-
-<style lang="scss">
-.pagination.mobile .info {
-  display: none;
-}
-</style>
