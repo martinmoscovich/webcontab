@@ -1,49 +1,66 @@
 <template>
-  <b-field grouped>
-    <!-- Input Desde -->
-    <b-field label="Desde" label-position="on-border">
-      <DatePicker
-        placeholder="Seleccione..."
-        locale="es"
-        v-model="filter.desde"
-        :min-date="minDate"
-        :max-date="maxDate"
-        :focused-date="filter.desde || filter.hasta || focusedDate"
-      >
-        <button class="button is-danger" @click="filter.desde = undefined">
-          <b-icon icon="close"></b-icon>
-          <span>Limpiar</span>
-        </button>
-      </DatePicker>
+  <div>
+    <b-field>
+      <!-- Input Desde -->
+
+      <b-field label="Desde" label-position="on-border">
+        <DatePicker
+          placeholder="Seleccione..."
+          locale="es"
+          v-model="filter.desde"
+          :min-date="minDate"
+          :max-date="maxDate"
+          :focused-date="filter.desde || filter.hasta || focusedDate"
+        >
+          <button class="button is-danger" @click="filter.desde = undefined">
+            <b-icon icon="close"></b-icon>
+            <span>Limpiar</span>
+          </button>
+        </DatePicker>
+      </b-field>
+
+      <!-- Input Hasta -->
+      <b-field label="Hasta" label-position="on-border">
+        <DatePicker
+          placeholder="Seleccione..."
+          v-model="filter.hasta"
+          :min-date="minDate"
+          :max-date="maxDate"
+          :focused-date="filter.hasta || filter.desde || focusedDate"
+        >
+          <button class="button is-danger" @click="filter.hasta = undefined">
+            <b-icon icon="close"></b-icon>
+            <span>Limpiar</span>
+          </button>
+        </DatePicker>
+      </b-field>
+
+      <template v-if="!isMobile">
+        <!-- Input Categoria -->
+        <b-field label="Categoría" label-position="on-border">
+          <CuentaSearch modo="categoria" :value="categoria" placeholder="Buscar" @input="onCategoriaSelect" />
+        </b-field>
+
+        <!-- Switch "Incluir Cero" -->
+        <b-switch v-model="filter.cero" class="mr-2">Cero</b-switch>
+
+        <!-- Boton -->
+        <b-button type="is-primary" icon-left="filter" @click="onSearchClick">Filtrar</b-button>
+      </template>
     </b-field>
+    <b-field grouped v-if="isMobile">
+      <!-- Input Categoria -->
+      <b-field label="Categoría" label-position="on-border">
+        <CuentaSearch modo="categoria" :value="categoria" placeholder="Buscar" @input="onCategoriaSelect" />
+      </b-field>
 
-    <!-- Input Hasta -->
-    <b-field label="Hasta" label-position="on-border">
-      <DatePicker
-        placeholder="Seleccione..."
-        v-model="filter.hasta"
-        :min-date="minDate"
-        :max-date="maxDate"
-        :focused-date="filter.hasta || filter.desde || focusedDate"
-      >
-        <button class="button is-danger" @click="filter.hasta = undefined">
-          <b-icon icon="close"></b-icon>
-          <span>Limpiar</span>
-        </button>
-      </DatePicker>
+      <!-- Switch "Incluir Cero" -->
+      <b-switch v-model="filter.cero" class="mr-2">Cero</b-switch>
+
+      <!-- Boton -->
+      <b-button type="is-primary" icon-left="filter" @click="onSearchClick">Filtrar</b-button>
     </b-field>
-
-    <!-- Input Categoria -->
-    <b-field label="Categoría" label-position="on-border">
-      <CuentaSearch modo="categoria" :value="categoria" placeholder="Buscar" @input="onCategoriaSelect" />
-    </b-field>
-
-    <!-- Switch "Incluir Cero" -->
-    <b-switch v-model="filter.cero" class="mr-2">Cero</b-switch>
-
-    <!-- Boton -->
-    <b-button type="is-primary" icon-left="filter" @click="onSearchClick">Filtrar</b-button>
-  </b-field>
+  </div>
 </template>
 
 <script lang="ts">
@@ -52,6 +69,7 @@ import { BalanceFilter } from '@/api/InformeApi';
 import { notificationService } from '@/service';
 import { Categoria } from '@/model/Cuenta';
 import { isAfter, isBefore } from '@/utils/date';
+import { uiStore } from '@/store';
 
 /** Filtro para balance */
 @Component
@@ -77,6 +95,11 @@ export default class FiltroBalance extends Vue {
 
   mounted() {
     this.setFilter();
+  }
+
+  /** Indica si es ancho mobile */
+  private get isMobile() {
+    return uiStore.isMobile;
   }
 
   /** Handler cuando cambia el valor actual */
@@ -130,9 +153,10 @@ export default class FiltroBalance extends Vue {
 
 <style lang="scss" scoped>
 .field {
-  &.is-grouped {
-    align-items: center;
-    margin: 5px 0;
+  align-items: center;
+  margin: 5px 0;
+  .field:not(:last-child) {
+    margin-right: 0.75rem;
   }
   margin-bottom: 0;
 }

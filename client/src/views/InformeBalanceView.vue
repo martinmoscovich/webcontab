@@ -36,7 +36,9 @@
       <div>
         <!-- Paginacion en la parte superior -->
         <b-pagination
+          :class="{ mobile: isMobile }"
           v-if="items.number > 1 || items.next"
+          :simple="isMobile"
           :total="items.total"
           :current="items.number"
           :per-page="PAGE_SIZE"
@@ -47,7 +49,15 @@
 
     <!-- Tabla de balance -->
     <div class="card">
+      <ListaBalanceMobile
+        v-if="isMobile"
+        :page="items"
+        :loading="loading"
+        :pageSize="PAGE_SIZE"
+        @selected="onCuentaSelected"
+      />
       <TablaBalanceCuentas
+        v-else
         :page="items"
         :loading="loading"
         :pageSize="PAGE_SIZE"
@@ -55,17 +65,29 @@
         @request="onPageRequest"
       />
     </div>
+
+    <!-- Paginacion en la parte superior -->
+    <b-pagination
+      v-if="isMobile && (items.number > 1 || items.next)"
+      class="mobile"
+      simple
+      :total="items.total"
+      :current="items.number"
+      :per-page="PAGE_SIZE"
+      @change="onPageRequest"
+    />
   </section>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator';
 import TablaBalanceCuentas from '@/components/cuentas/balance/TablaBalanceCuentas.vue';
+import ListaBalanceMobile from '@/components/cuentas/balance/ListaBalanceMobile.vue';
 import FiltroBalance from '@/components/cuentas/balance/FiltroBalance.vue';
 import { informeApi } from '../api';
 import Page, { emptyPage } from '@/core/Page';
 import { parseServerDate } from '../utils/date';
-import { sessionStore, monedaStore, cuentaStore } from '../store';
+import { sessionStore, monedaStore, cuentaStore, uiStore } from '../store';
 import { routerService, notificationService } from '../service';
 import { BalanceFilter, BalanceSearchOptions } from '../api/InformeApi';
 import { BalanceItem, BalanceTotal } from '../model/Balance';
@@ -79,7 +101,7 @@ import { Categoria } from '@/model/Cuenta';
  * Pagina de informe de balance (saldos por cuenta)
  */
 @Component({
-  components: { FiltroBalance, TablaBalanceCuentas }
+  components: { FiltroBalance, TablaBalanceCuentas, ListaBalanceMobile }
 })
 export default class InformeBalanceView extends Vue {
   loading = false;
@@ -106,6 +128,11 @@ export default class InformeBalanceView extends Vue {
   @Watch('$route')
   private onRouteChange() {
     this.search();
+  }
+
+  /** Indica si es ancho mobile */
+  private get isMobile() {
+    return uiStore.isMobile;
   }
 
   private get ejercicio() {
@@ -252,4 +279,8 @@ export default class InformeBalanceView extends Vue {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss">
+.pagination.mobile .info {
+  display: none;
+}
+</style>
