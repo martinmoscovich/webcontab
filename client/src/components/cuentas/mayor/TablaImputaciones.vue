@@ -1,9 +1,10 @@
 <template>
   <b-table
     :row-class="() => 'imputacion-row'"
-    :data="imputacionesConSaldo"
+    :data="itemsConSaldoAnterior"
     narrowed
     hoverable
+    :mobile-cards="false"
     :loading="loading"
     @click="onItemClick"
   >
@@ -50,13 +51,13 @@
         }"
       >
         <!-- Checkbox que indica si usar saldo anterior o no -->
-        <b-checkbox
+        <!-- <b-checkbox
           :value="useSaldoAnterior"
           @input="useSaldoAnterior = !useSaldoAnterior"
           v-if="!isNotHeader(props.row)"
           >{{ formatCurrency(useSaldoAnterior ? props.row.saldo : 0) }}
-        </b-checkbox>
-        <template v-else>{{ formatCurrency(props.row.saldo) }}</template>
+        </b-checkbox> -->
+        <template>{{ formatCurrency(props.row.saldo) }}</template>
       </b-table-column>
     </template>
 
@@ -75,13 +76,11 @@
 </template>
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import Page from '@/core/Page';
 import { formatDate } from '@/utils/date';
 import { ImputacionSaldo } from '@/model/ImputacionDTO';
-import { twoDecimals, formatCurrency } from '../../utils/currency';
-import { ImputacionDTO } from '../../model/ImputacionDTO';
-import { isDefined } from '../../utils/general';
+import { formatCurrency } from '@/utils/currency';
 import { Moneda } from '@/model/Moneda';
+import { isDefined } from '@/utils/general';
 
 /**
  * Imputaciones de una cuenta (para el Mayor)
@@ -90,9 +89,9 @@ import { Moneda } from '@/model/Moneda';
   components: {}
 })
 export default class TablaImputaciones extends Vue {
-  /** Pagina actual de imputaciones */
+  /** Lista de imputaciones con saldo a mostrar */
   @Prop()
-  page: Page<ImputacionDTO>;
+  imputacionesConSaldo: ImputacionSaldo[];
 
   /** Saldo anterior a la primer imputacion de la pagina actual */
   @Prop()
@@ -106,31 +105,12 @@ export default class TablaImputaciones extends Vue {
   @Prop()
   moneda: Moneda;
 
-  /** Indica si se muestra el saldo anterior en la primera fila */
-  private useSaldoAnterior = true;
-
-  /** Recorre la pagina de imputaciones y genera el saldo parcial por cada una */
-  private get imputacionesConSaldo(): ImputacionSaldo[] {
-    if (this.page?.items?.length === 0) return [];
-
-    // Si se usa el saldo anterior y esta definido, arranca de dicho saldo.
-    // Si no, arranca de 0
-    let saldo = this.useSaldoAnterior && this.saldoAnterior ? this.saldoAnterior : 0;
-
-    // Se va acumulando el saldo en cada item y se genera un item con la imputacion y el saldo parcial
-    const items = this.page.items.map(imputacion => {
-      saldo = twoDecimals(saldo + (imputacion.importe ?? 0));
-      return { imputacion, saldo };
-    });
-
+  private get itemsConSaldoAnterior() {
+    const items = [...this.imputacionesConSaldo];
     // Si hay saldo anterior, se lo agrega como primera fila de la tabla
     if (this.hasSaldoAnterior) items.unshift(this.imputacionSaldoAnterior);
-    return items;
-  }
 
-  /** Indica si hay saldo anterior */
-  private get hasSaldoAnterior() {
-    return isDefined(this.saldoAnterior) && this.saldoAnterior !== 0;
+    return items;
   }
 
   /** Genera el item "placeholder" para el saldo anterior */
@@ -144,7 +124,7 @@ export default class TablaImputaciones extends Vue {
           numero: -1,
           detalle: '',
           imputaciones: [],
-          fecha: this.page?.items?.[0].asiento.fecha,
+          fecha: this.imputacionesConSaldo?.[0].imputacion.asiento.fecha,
           creationUser: null,
           creationDate: null,
           updateUser: null,
@@ -156,6 +136,14 @@ export default class TablaImputaciones extends Vue {
       },
       saldo: this.saldoAnterior
     };
+  }
+
+  // /** Indica si se muestra el saldo anterior en la primera fila */
+  // private useSaldoAnterior = true;
+
+  /** Indica si hay saldo anterior */
+  private get hasSaldoAnterior() {
+    return isDefined(this.saldoAnterior) && this.saldoAnterior !== 0;
   }
 
   /** Formatea una fecha */

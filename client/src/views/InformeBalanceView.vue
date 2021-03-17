@@ -38,7 +38,6 @@
         <b-pagination
           :class="{ mobile: isMobile }"
           v-if="items.number > 1 || items.next"
-          :simple="isMobile"
           :total="items.total"
           :current="items.number"
           :per-page="PAGE_SIZE"
@@ -64,7 +63,6 @@
     <b-pagination
       v-if="isMobile && (items.number > 1 || items.next)"
       class="mobile"
-      simple
       :total="items.total"
       :current="items.number"
       :per-page="PAGE_SIZE"

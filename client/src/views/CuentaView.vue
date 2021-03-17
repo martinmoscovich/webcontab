@@ -60,7 +60,7 @@ import { informeApi } from '@/api';
 import { emptyPage } from '../core/Page';
 import { ImputacionDTO } from '@/model/ImputacionDTO';
 import CuentaForm from '@/components/cuentas/CuentaForm.vue';
-import MayorView from '@/components/cuentas/MayorView.vue';
+import MayorView from '@/components/cuentas/mayor/MayorView.vue';
 import CategoriaHeader from '@/components/categorias/CategoriaHeader.vue';
 import { routerService, notificationService } from '../service';
 import { sessionStore, cuentaStore, monedaStore } from '../store';

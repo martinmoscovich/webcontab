@@ -49,7 +49,7 @@ import CardSeleccionCuentas from '@/components/cuentas/CardSeleccionCuentas.vue'
 import { informeApi } from '../api';
 import { CuentaOCategoria } from '../model/Cuenta';
 import { byId } from '../utils/array';
-import { notificationService } from '../service';
+import { notificationService } from '@/service';
 
 /**
  * Pagina de informe Mayor (imputaciones por cuenta).

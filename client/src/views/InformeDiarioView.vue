@@ -20,7 +20,6 @@
         <b-pagination
           v-if="asientos.number > 1 || asientos.next"
           :class="{ mobile: isMobile }"
-          :simple="isMobile"
           :total="asientos.total"
           :current="asientos.number"
           :per-page="PAGE_SIZE"
@@ -38,7 +37,6 @@
     <b-pagination
       v-if="isMobile && (asientos.number > 1 || asientos.next)"
       class="mobile"
-      simple
       :total="asientos.total"
       :current="asientos.number"
       :per-page="PAGE_SIZE"

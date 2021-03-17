@@ -10,10 +10,11 @@
           :maxDate="ejercicio ? ejercicio.finalizacion : null"
         />
       </div>
-      <div>
+      <div :class="{ 'mb-2': isMobile }">
         <!-- Paginacion en la parte superior -->
         <b-pagination
           v-if="imputaciones.number > 1 || imputaciones.next"
+          :class="{ mobile: isMobile }"
           :total="imputaciones.total"
           :current="imputaciones.number"
           :per-page="pageSize"
@@ -24,40 +25,42 @@
 
     <div class="card">
       <!-- Imputaciones -->
-      <TablaImputaciones
+      <ListaMayor
+        :isMobile="isMobile"
         :page="imputaciones"
         :saldoAnterior="imputaciones.saldoAnterior"
         :moneda="moneda"
         :loading="loading"
         @itemClick="onImputacionClick"
       />
-
-      <!-- Paginador -->
-      <b-pagination
-        v-if="imputaciones.number > 1 || imputaciones.next"
-        :total="imputaciones.total"
-        :current="imputaciones.number"
-        :per-page="pageSize"
-        @change="onPageRequest"
-      />
     </div>
+    <!-- Paginador -->
+    <b-pagination
+      v-if="imputaciones.number > 1 || imputaciones.next"
+      :class="{ mobile: isMobile }"
+      :total="imputaciones.total"
+      :current="imputaciones.number"
+      :per-page="pageSize"
+      @change="onPageRequest"
+    />
   </div>
 </template>
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { AsientosSearchFilter } from '../../api/AsientoApi';
-import { Ejercicio } from '../../model/Ejercicio';
-import { Moneda } from '../../model/Moneda';
-import { ImputacionDTO } from '../../model/ImputacionDTO';
+import { AsientosSearchFilter } from '@/api/AsientoApi';
+import { Ejercicio } from '@/model/Ejercicio';
+import { Moneda } from '@/model/Moneda';
+import { ImputacionDTO } from '@/model/ImputacionDTO';
 import { ImputacionesCuenta } from '@/model/ImputacionesCuenta';
-import TablaImputaciones from './TablaImputaciones.vue';
+import ListaMayor from './ListaMayor.vue';
 import FiltroAsientos from '@/components/asientos/FiltroAsientos.vue';
+import { uiStore } from '@/store';
 
 /**
  * Componente que muestra el Mayor de una cuenta (Imputaciones)
  */
 @Component({
-  components: { FiltroAsientos, TablaImputaciones }
+  components: { FiltroAsientos, ListaMayor }
 })
 export default class MayorView extends Vue {
   /** Ejercicio actual */
@@ -83,6 +86,11 @@ export default class MayorView extends Vue {
   /** Tamanio de la pagina, utilizado por el paginador */
   @Prop()
   pageSize: number;
+
+  /** Indica si es ancho mobile */
+  private get isMobile() {
+    return uiStore.isMobile;
+  }
 
   /** Handler cuando se pide otra pagina */
   private onPageRequest(page: number) {
