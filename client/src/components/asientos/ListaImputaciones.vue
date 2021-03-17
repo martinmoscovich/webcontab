@@ -1,5 +1,5 @@
 <template>
-  <CardComponentWithActions title="Imputaciones" icon="ballot" dense class="card-imputaciones">
+  <CardComponentWithActions :title="isMobile ? '' : 'Imputaciones'" icon="ballot" dense class="card-imputaciones">
     <!-- Boton de nueva imputacion -->
     <template v-slot:title-actions>
       <b-tooltip v-if="!readonly" label="Nueva imputación" position="is-bottom" type="is-info">
@@ -12,9 +12,14 @@
       <span class="mr-3">Saldo</span>
       <span
         v-for="(item, index) in formattedSaldos"
-        class="title mb-0 ml-3"
+        class="mb-0 ml-3"
         :key="index"
-        :class="{ 'has-text-danger': !item.cero }"
+        :class="{
+          'has-text-danger': !item.cero,
+          title: !isMobile,
+          subtitle: isMobile,
+          'has-text-weight-bold': isMobile
+        }"
         >{{ item.formattedSaldo }}</span
       >
     </template>
@@ -44,7 +49,7 @@ import { formatCurrency, twoDecimals } from '@/utils/currency';
 import ImputacionItem from '@/components/asientos/ImputacionItem.vue';
 import { ImputacionModel } from '@/model/Imputacion';
 import { ImputacionSaldo } from '@/model/ImputacionDTO';
-import { cuentaStore, monedaStore } from '../../store';
+import { cuentaStore, monedaStore, uiStore } from '../../store';
 import { ValidableVue } from '../../core/ui/elements';
 
 /**
@@ -89,6 +94,11 @@ export default class ListaImputaciones extends Vue implements ValidableVue {
   /** Resetea todos los forms de imputaciones */
   reset() {
     this.$refs.items?.forEach(i => i.reset());
+  }
+
+  /** Indica si es ancho mobile */
+  private get isMobile() {
+    return uiStore.isMobile;
   }
 
   /**

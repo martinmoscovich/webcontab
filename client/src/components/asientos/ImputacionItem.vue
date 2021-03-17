@@ -17,7 +17,7 @@
         v-model="imputacion.detalle"
         @input="onDetalleChange"
         @keydown.native="onKeydown"
-        style="width: 200px"
+        :style="{ width: isMobile ? '100px' : '200px' }"
         :disabled="readonly"
       ></b-input>
     </Field>
@@ -163,7 +163,7 @@ export default class ImputacionItem extends Vue implements ValidableVue, Focusab
   }
 
   private get cuentaWidth() {
-    if (this.isMobile) return 200;
+    if (this.isMobile) return 150;
     return 250;
   }
 
