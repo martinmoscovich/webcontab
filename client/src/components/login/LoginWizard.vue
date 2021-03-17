@@ -75,6 +75,10 @@ export default class LoginWizard extends Vue {
     return sessionStore.enEjercicio;
   }
 
+  private get asientosEditables() {
+    return this.enEjercicio && !sessionStore.asientosReadonly;
+  }
+
   private get enOrganizacion() {
     return sessionStore.enOrganizacion;
   }
@@ -87,7 +91,11 @@ export default class LoginWizard extends Vue {
       if (this.$route.query.redirect) {
         this.$router.replace(this.$route.query.redirect as string);
       } else {
-        routerService.goToCategoria();
+        if (this.asientosEditables) {
+          routerService.goToNuevoAsiento();
+        } else {
+          routerService.goToCategoria();
+        }
       }
       this.step = 3;
     } else if (this.enOrganizacion) {
