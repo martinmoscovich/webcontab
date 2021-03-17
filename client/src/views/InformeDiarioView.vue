@@ -15,7 +15,7 @@
           :maxDate="ejercicio ? ejercicio.finalizacion : null"
         />
       </div>
-      <div>
+      <div :class="{ 'mb-2': isMobile }">
         <!-- Paginacion en la parte superior -->
         <b-pagination
           v-if="asientos.number > 1 || asientos.next"

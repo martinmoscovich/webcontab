@@ -11,7 +11,11 @@
 
       <!-- Nombres de las categorias del path -->
       <template v-if="cuenta.path">
-        <li v-for="item in cuenta.path" :key="item.id">
+        <li v-if="isMobile && pathToLong">
+          <span style="padding: 0 0.5em;">...</span>
+        </li>
+
+        <li v-for="item in path" :key="item.id">
           <a @click="onItemClick(item)">{{ item.name }}</a>
         </li>
       </template>
@@ -34,6 +38,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import { CuentaOCategoria } from '@/model/Cuenta';
 import { IdNameModel } from '@/model/IdModel';
 import EditableLabel from '@/components/common/EditableLabel';
+import { uiStore } from '@/store';
 
 /** Breadcrumb de Categoria / Cuenta */
 @Component({
@@ -47,6 +52,23 @@ export default class CategoriasBreadcrumb extends Vue {
   /** Indica si no se puede modificar el nombre */
   @Prop({ type: Boolean })
   readonly: boolean;
+
+  /** Indica si es ancho mobile */
+  private get isMobile() {
+    return uiStore.isMobile;
+  }
+
+  private get pathToLong() {
+    if (!this.cuenta.path) return false;
+    return this.cuenta.path.length >= 2;
+  }
+
+  private get path() {
+    if (!this.cuenta.path || this.cuenta.path.length === 0) return [];
+    if (!this.isMobile || this.cuenta.path.length < 2) return this.cuenta.path;
+
+    return [this.cuenta.path[this.cuenta.path.length - 1]];
+  }
 
   /** Indica si la categoria es raiz */
   private get isRoot() {
