@@ -3,14 +3,14 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.mmoscovich</groupId>
     <artifactId>webcontab</artifactId>
-    <version>0.21</version>
+    <version>0.22</version>
     <packaging>pom</packaging>
     <name>WebContab</name>
     <description>Sistema Contable Web</description>
     
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <server.version>21</server.version>
+        <server.version>22</server.version>
     </properties>
 
     <dependencyManagement>
