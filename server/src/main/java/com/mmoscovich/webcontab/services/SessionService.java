@@ -194,9 +194,9 @@ public class SessionService {
 		// Si el usuario es admin, puede ingresar sin necesidad de ser miembro 
 		if(user.getType() == UserType.ADMIN) roles.add(UserType.ADMIN.name());
 		
-		// Si no hay roles, significa que no tiene permisos para esta organizacion
-		// TODO Ver si anda bien para salir de org (null) sin ser admin
-		if(roles.isEmpty()) throw new EntityNotFoundException(Organizacion.class, orgId);
+		// Si no hay roles, significa que no tiene permisos para esta organizacion,
+		// siempre que esta no sea null (o sea, esta saliendo)
+		if(org != null && roles.isEmpty()) throw new EntityNotFoundException(Organizacion.class, orgId);
 		
 		// Actualiza los roles de la sesion
 		updateRoles(roles);
