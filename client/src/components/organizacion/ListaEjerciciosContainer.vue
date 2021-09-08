@@ -8,6 +8,7 @@
     @inflacion="onInflacion"
     @cerrar="onCerrar"
     @reabrir="onReabrir"
+    @recalcular="onRecalcularApertura"
     @eliminar="onEliminar"
     @selected="onSelected"
   />
@@ -94,6 +95,11 @@ export default class ListaEjerciciosContainer extends Vue {
   /** Handler cuando se desea reabrir un ejercicio */
   private onReabrir(item: Ejercicio) {
     organizacionStore.reabrirEjercicio(item);
+  }
+
+  /** Handler cuando se desea recalcular el asiento de apertura de un ejercicio */
+  private onRecalcularApertura(item: Ejercicio) {
+    organizacionStore.recalcularApertura(item);
   }
 
   /** Handler cuando se desea borrar un ejercicio */

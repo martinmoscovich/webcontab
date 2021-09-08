@@ -15,6 +15,10 @@
         <b-icon icon="order-numeric-ascending" custom-size="mdi-18px" />
         <span class="menuitem-text">Renumerar</span>
       </b-dropdown-item>
+      <b-dropdown-item v-if="tieneApertura" @click="$emit('recalcular')" aria-role="listitem">
+        <b-icon icon="calculator" custom-size="mdi-18px" />
+        <span class="menuitem-text">Recalcular apertura</span>
+      </b-dropdown-item>
       <b-dropdown-item @click="$emit('cerrar')" aria-role="listitem">
         <b-icon icon="lock" custom-size="mdi-18px" />
         <span class="menuitem-text">Cerrar</span>
@@ -48,6 +52,10 @@ export default class EjercicioActions extends Vue {
   /** Indica si el ejercicio esta finalizado o no */
   @Prop({ type: Boolean })
   finalizado: boolean;
+
+  /** Indica si el ejercicio es el primero */
+  @Prop({ type: Boolean })
+  tieneApertura: boolean;
 }
 </script>
 

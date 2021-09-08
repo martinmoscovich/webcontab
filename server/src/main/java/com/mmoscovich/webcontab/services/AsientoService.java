@@ -369,17 +369,50 @@ public class AsientoService {
 	 */
 	@Transactional
 	public Asiento crearApertura(Ejercicio ejercicio, List<Imputacion> imputacionesCierreAnterior) {
-		log.info("Creando asiento de apertura del  {}", ejercicio);
+		log.info("Creando asiento de apertura del {}", ejercicio);
 		
 		// El nuevo asiento sera el 1, con fecha igual a la de inicio del ejercicio
 		Asiento apertura = new Asiento(ejercicio, (short)1, ejercicio.getInicio(), "Apertura de Libros", null);
 		
+		// Crea las imputaciones del asiento
+		this.completarAsientoDeApertura(apertura, imputacionesCierreAnterior);
+		
+		return this.persistir(apertura);
+	}
+	
+	@Transactional
+	public Asiento recalcularApertura(Asiento apertura, List<Imputacion> imputacionesCierreAnterior) {
+		log.info("Recalculando el asiento de apertura (id: {}) del {}", apertura.getId(), apertura.getEjercicio());
+		
+		// Se borran las imputaciones anteriores
+		imputacionService.eliminarByAsiento(apertura);
+		apertura.getImputaciones().clear();
+		
+		// Crea las imputaciones del asiento
+		this.completarAsientoDeApertura(apertura, imputacionesCierreAnterior);
+		
+		return this.persistir(apertura);
+	}
+	
+	/**
+	 * Dado un asiento de apertura (nuevo o existente), calcula y agrega las imputaciones necesarias.
+	 * <p>
+	 * Para esto, crea imputaciones inversas a la del asiento de cierre del ejercicio anterior (ya sea real o simulado)
+	 * </p>
+	 * @param asiento asiento a completar
+	 * @return <code>true</code> si el asiento tiene sentido (tiene imputaciones). <code>false</code> en caso contrario.
+	 * 
+	 */
+	private boolean completarAsientoDeApertura(Asiento asiento, List<Imputacion> imputacionesCierreAnterior) {
+		if(imputacionesCierreAnterior == null || imputacionesCierreAnterior.isEmpty()) {
+			return false;
+		}
 		// Este asiento contiene imputaciones inversas a las del cierre anterior, para volver los saldos del balance
 		// al estado anterior a cerrar el ejercicio
 		for(Imputacion impCierre : imputacionesCierreAnterior) {
-			apertura.agregarImputacion(impCierre.crearInversa("Apertura de Libros"));
+			asiento.agregarImputacion(impCierre.crearInversa("Apertura de Libros"));
 		}
-		return this.persistir(apertura);
+		return true;
 	}
 
 	/**

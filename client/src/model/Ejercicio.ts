@@ -25,6 +25,9 @@ export interface Ejercicio extends IdModel {
   /** Indica si esta cerrado */
   finalizado: boolean;
 
+  /** Id del asiento de apertura si existe (solo no existe para el primer ejercicio) */
+  asientoAperturaId?: number;
+
   /** Id del asiento de ajuste por inflacion si existe */
   asientoAjusteId?: number;
 }

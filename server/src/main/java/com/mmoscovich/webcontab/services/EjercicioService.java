@@ -251,6 +251,51 @@ public class EjercicioService {
 		
 		return dao.save(ej);
 	}
+	
+	/**
+	 * Recalcula y actualiza el asiento de apertura del ejercicio.
+	 * @param ej ejercicio en el cual actualizar el asiento de apertura
+	 * 
+	 * @return el ejercicio actualizado
+	 */
+	@Transactional
+	public Ejercicio recalcularApertura(Ejercicio ej) {
+		if(ej.getAsientoAperturaId() == null) throw new ConflictException("El ejercicio no tiene asiento de apertura");
+		
+		// Se busca el asiento de apertura
+		Asiento apertura = asientoService.getByIdOrThrow(ej, ej.getAsientoAperturaId(), false);
+		
+		// Si no existe apertura, se tira not found
+		if(apertura == null) throw new EntityNotFoundException(Asiento.class, ej.getAsientoAperturaId());
+		
+		// El asiento de apertura se calcula en base al de cierre anterior
+		Asiento asientoCierreAnterior = null;
+		
+		// Se busca el ejercicio anterior al deseado
+		Optional<Ejercicio> optLast = dao.findUltimoEjercicioAnteriorA(ej.getOrganizacion(), ej.getInicio());
+		
+		// Si no hay otros ejercicios, no hay nada que hacer
+		if(optLast.isEmpty()) {
+			log.info("No hay ejercicios previos, nada que calcular");
+			return ej;
+		}
+		
+		Ejercicio last = optLast.get();
+
+		// Si existe cierre anterior, se lo busca (con imputaciones) para crear el de apertura
+		if(last.getAsientoCierreId() != null) asientoCierreAnterior = asientoService.getByIdOrThrow(last, last.getAsientoCierreId(), true);
+
+		// Si no existe cierre anterior, se simula dicho asiento (pero sin modificar ese ejercicio)
+		if(asientoCierreAnterior == null) {
+			log.info("El ejercicio anterior no esta cerrado, se calcula la apertura sin los asientos requeridos");
+			asientoCierreAnterior = asientoService.simularCierre(last);
+		}
+
+		// Se crea el asiento de apertura usando las imputaciones (reales o simuladas) del cierre anterior.
+		asientoService.recalcularApertura(apertura, asientoCierreAnterior.getImputaciones());
+		
+		return ej;
+	}
 
 	/**
 	 * Renumera los asientos de un ejercicio y establece o actualiza la fecha de confirmacion de asientos del ejercicio.

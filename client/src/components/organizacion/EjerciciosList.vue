@@ -28,10 +28,12 @@
         <!-- Menu de acciones posibles para un ejercicio -->
         <EjercicioActions
           :finalizado="item.finalizado"
+          :tieneApertura="!!item.asientoAperturaId"
           @renumerar="onRenumerar(item)"
           @inflacion="onInflacion(item)"
           @cerrar="onCerrar(item)"
           @reabrir="onReabrir(item)"
+          @recalcular="onRecalcularApertura(item)"
           @eliminar="onEliminar(item)"
         />
 
@@ -157,6 +159,21 @@ export default class EjerciciosList extends Vue {
       confirmText: 'Reabrir',
       // Si confirma, se emite el evento
       onConfirm: () => this.$emit('reabrir', item)
+    });
+  }
+
+  /** Handler cuando se hace click en "Recalcula Apertura" */
+  private onRecalcularApertura(item: Ejercicio) {
+    // Se pide confirmacion
+    this.$buefy.dialog.confirm({
+      title: 'Recalcular apertura de ejercicio',
+      icon: 'help',
+      hasIcon: true,
+      message: this.getConfirmMessage(item, 'recalcular apertura'),
+      cancelText: 'No',
+      confirmText: 'Recalcular',
+      // Si confirma, se emite el evento
+      onConfirm: () => this.$emit('recalcular', item)
     });
   }
 
