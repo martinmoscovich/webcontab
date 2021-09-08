@@ -29,4 +29,11 @@ public interface EjercicioRepository extends JpaRepository<Ejercicio, Long> {
 	/** Busca los ejercicios de la organizacion que se solapan con las fechas especificadas */
 	@Query("FROM Ejercicio WHERE organizacion = :org AND inicio <= :fin2 AND :inicio2 <= finalizacion")
 	List<Ejercicio> findEjerciciosQueSolapan(Organizacion org, LocalDate inicio2, LocalDate fin2);
+	
+	/** 
+	 * Obtiene el ultimo ejercicio de la organizacion en finalizar antes de una determinada fecha.
+	 * <p>Util para buscar el ejercicio anterior a uno deseado, usando la organizacion de dicho ejercicio y su fecha de inicio</p>
+	 */
+	@Query("FROM Ejercicio WHERE organizacion = :org AND finalizacion = (SELECT MAX(e.finalizacion) FROM Ejercicio e WHERE e.organizacion = :org AND e.finalizacion < :fecha)")
+	Optional<Ejercicio> findUltimoEjercicioAnteriorA(Organizacion org, LocalDate fecha);
 }

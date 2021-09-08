@@ -22,6 +22,7 @@
       @inflacion="onInflacion"
       @cerrar="onCerrar"
       @reabrir="onReabrir"
+      @recalcular="onRecalcularApertura"
       @eliminar="onEliminar"
       @selected="onSelected"
     />
@@ -123,6 +124,11 @@ export default class CardEjercicios extends Vue {
   /** Handler del boton de reabrir ejercicio */
   private onReabrir(item: Ejercicio) {
     this.$emit('reabrir', item);
+  }
+
+  /** Handler del boton de recalcular asiento de apertura del ejercicio */
+  private onRecalcularApertura(item: Ejercicio) {
+    this.$emit('recalcular', item);
   }
 
   /** Handler del boton de borrar ejercicio */

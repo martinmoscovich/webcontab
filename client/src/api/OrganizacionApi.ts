@@ -105,6 +105,10 @@ export class OrganizacionApi extends SimpleApi<Organizacion> {
     return this.http.put(`${EJERCICIOS_BASE_URL}/${ejercicio.id}/inflacion`).then(toEntity(mapEjercicicioFromServer));
   }
 
+  recalcularApertura(ejercicio: Ejercicio): Promise<Ejercicio> {
+    return this.http.put(`${EJERCICIOS_BASE_URL}/${ejercicio.id}/apertura`).then(toEntity(mapEjercicicioFromServer));
+  }
+
   findMiembros(org: Organizacion): Promise<Member[]> {
     return this.http.get(`${BASE_URL}/${org.id}/miembros`).then(toList());
   }

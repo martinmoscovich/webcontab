@@ -183,6 +183,26 @@ export class OrganizacionStore extends BaseSimpleStore<Organizacion> {
     }
   }
 
+  @Action
+  async recalcularApertura(ejercicio: Ejercicio) {
+    try {
+      this.recalcularAperturaRequest();
+
+      // Se guarda el id del asiento de apertura
+      const asientoId = ejercicio.asientoAperturaId;
+
+      const result = await organizacionApi.recalcularApertura(ejercicio);
+
+      // Si habia asiento de ajuste, se lo quita de la cache
+      if (asientoId) asientoStore.clearAsientoFromCache(asientoId);
+
+      this.recalcularAperturaSuccess(result);
+    } catch (e) {
+      this.recalcularAperturaError(e);
+      throw e;
+    }
+  }
+
   /**
    * Agrega un ejercicio al store.
    * Se llama desde el Store de session para registrar el ejercicio
@@ -330,6 +350,32 @@ export class OrganizacionStore extends BaseSimpleStore<Organizacion> {
   private ajustarPorInflacionError(error: WebContabError) {
     listFail(this.ejercicios);
     logError('ajustar por inflacion el ejercicio', error);
+    notificationService.error(error);
+  }
+
+  @Mutation
+  private recalcularAperturaRequest() {
+    listRequest(this.ejercicios);
+  }
+
+  @Mutation
+  private recalcularAperturaSuccess(ejercicio: Ejercicio) {
+    entitySuccessInList(this.ejercicios, ejercicio);
+
+    if (!ejercicio.asientoAperturaId) return;
+
+    notificationService.show({
+      type: 'success',
+      message: 'Se recalculó el asiento de apertura del ejercicio',
+      actionText: 'Ver',
+      to: routerService.asiento({ id: ejercicio.asientoAperturaId })
+    });
+  }
+
+  @Mutation
+  private recalcularAperturaError(error: WebContabError) {
+    listFail(this.ejercicios);
+    logError('recalcular el asiento de apertura del ejercicio', error);
     notificationService.error(error);
   }
 }

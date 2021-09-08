@@ -92,6 +92,22 @@ public class EjercicioResource {
 	}
 	
 	/**
+	 * Recalcula y modifica el asiento de apertura del ejercicio.
+	 * <p>
+	 * Este asiento se pudo haber generado en base a un ejercicio anterior abierto, que se siguio modificando.
+	 * <br>Por lo tanto se debe poner recalcular con los saldos actuales de dicho ejercicio. 
+	 * </p>
+	 * @return el ejercicio actualizado 
+	 * @throws EntityNotFoundException si no se encuentra el ejercicio en la organizacion actual
+	 * @throws OrganizacionNoSeleccionadaException si no se selecciono organizacion
+	 */
+	@PUT
+	@Path("{id}/apertura")
+	public Ejercicio recalcularApertura(@PathParam("id") @Min(1) Long id) throws EntityNotFoundException, OrganizacionNoSeleccionadaException {
+		return service.recalcularApertura(this.getById(id));
+	}
+	
+	/**
 	 * Renumera los asientos de un ejercicio y establece o actualiza la fecha de confirmacion de asientos del ejercicio.
 	 * <p>Se renumeran <b>TODOS</b> los asientos del ejercicio.
 	 * <br>La fecha se utiliza para establecer hasta que fecha estan <b>confirmados</b> los asientos.
